@@ -1,0 +1,10 @@
+.env
+*.local
+~$*
+~WRL*.tmp
+node_modules/
+.venv/
+
+# Archivos ejecutables y comprimidos
+*.exe
+*.zip
