@@ -12,14 +12,14 @@ Verificable ejecutando `docker compose up` en la laptop y confirmando health che
 
 ## Acceptance criteria
 
-- [ ] Carpetas `services/bot-conversation-service/` y `services/ordering-service/` existen con empaquetamiento vertical por bounded context.
-- [ ] `docker-compose.yml` orquesta: `postgres`, `redis`, `ordering`, `bot-conversation`.
-- [ ] Servicios conectados por red aislada; puertos de PostgreSQL y Redis no expuestos al host en configuración base (acceso vía red Docker).
-- [ ] Variables de entorno inyectadas por servicio vía `.env.example` (sin valores reales).
-- [ ] Ambos servicios exponen `/health` funcional.
-- [ ] Jest configurado en ambos `package.json` con script `test`.
-- [ ] El Bot-Conversation-Service no contiene dependencias ni código de acceso a PostgreSQL.
-- [ ] Documentación breve de arranque local incluida (README o comentario en compose).
+- [x] Carpetas `services/bot-conversation-service/` y `services/ordering-service/` existen con empaquetamiento vertical por bounded context.
+- [x] `docker-compose.yml` orquesta: `postgres`, `redis`, `ordering`, `bot-conversation`.
+- [x] Servicios conectados por red aislada; puertos de PostgreSQL y Redis no expuestos al host en configuración base (acceso vía red Docker).
+- [x] Variables de entorno inyectadas por servicio vía `.env.example` (sin valores reales).
+- [x] Ambos servicios exponen `/health` funcional.
+- [x] Jest configurado en ambos `package.json` con script `test`.
+- [x] El Bot-Conversation-Service no contiene dependencias ni código de acceso a PostgreSQL.
+- [x] Documentación breve de arranque local incluida (README o comentario en compose).
 
 ## Blocked by
 

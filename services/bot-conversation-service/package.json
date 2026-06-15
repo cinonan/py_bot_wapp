@@ -1,0 +1,23 @@
+{
+  "name": "bot-conversation-service",
+  "version": "1.0.0",
+  "description": "Conversational UI microservice — WhatsApp webhook and session state",
+  "main": "src/app.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "test": "jest"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "redis": "^5.6.0"
+  },
+  "devDependencies": {
+    "jest": "^30.0.4",
+    "supertest": "^7.1.1"
+  }
+}

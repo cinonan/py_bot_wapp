@@ -1,0 +1,72 @@
+# Local development stack — PostgreSQL, Redis, ordering and bot-conversation services.
+# PostgreSQL and Redis are only reachable on the internal backend-network (no host ports).
+#
+# Quick start:
+#   docker compose up --build
+#   curl http://localhost:3000/health   # bot-conversation (Redis)
+#   curl http://localhost:3001/health   # ordering (PostgreSQL)
+#
+# Stop:
+#   docker compose down
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ordering
+      POSTGRES_PASSWORD: ordering_dev
+      POSTGRES_DB: ordering_dev
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ordering -d ordering_dev']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - backend-network
+
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - backend-network
+
+  ordering:
+    build:
+      context: ./services/ordering-service
+    environment:
+      PORT: 3001
+      DATABASE_URL: postgresql://ordering:ordering_dev@postgres:5432/ordering_dev
+    ports:
+      - '3001:3001'
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - backend-network
+
+  bot-conversation:
+    build:
+      context: ./services/bot-conversation-service
+    environment:
+      PORT: 3000
+      REDIS_URL: redis://redis:6379
+    ports:
+      - '3000:3000'
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - backend-network
+
+networks:
+  backend-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
