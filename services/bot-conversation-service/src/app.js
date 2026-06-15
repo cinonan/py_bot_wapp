@@ -26,8 +26,32 @@ async function startServer() {
     await deps.redis.connect();
   }
 
-  app.listen(port, () => {
+  await deps.streamEventConsumer.start();
+
+  const server = app.listen(port, () => {
     console.log(`Bot conversation service listening on port ${port}`);
+  });
+
+  async function shutdown(signal) {
+    console.log(`Bot conversation service received ${signal}, shutting down stream consumer`);
+    await deps.streamEventConsumer.shutdown();
+    server.close();
+    await deps.redis.quit();
+    process.exit(0);
+  }
+
+  process.on('SIGTERM', () => {
+    shutdown('SIGTERM').catch((error) => {
+      console.error('Shutdown error:', error.message);
+      process.exit(1);
+    });
+  });
+
+  process.on('SIGINT', () => {
+    shutdown('SIGINT').catch((error) => {
+      console.error('Shutdown error:', error.message);
+      process.exit(1);
+    });
   });
 
   return app;

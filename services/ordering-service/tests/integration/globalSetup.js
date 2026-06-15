@@ -8,6 +8,7 @@ const COMPOSE_FILE = path.join(SERVICE_ROOT, 'docker-compose.test.yml');
 const TEST_ENV_FILE = path.join(__dirname, '.test-env.json');
 const DOCKER_DATABASE_URL =
   'postgresql://ordering_test:ordering_test@localhost:5433/ordering_test';
+const DOCKER_REDIS_URL = 'redis://localhost:6381';
 
 async function prepareExternalDatabase(databaseUrl) {
   const parsed = new URL(databaseUrl);
@@ -48,6 +49,7 @@ module.exports = async () => {
       TEST_ENV_FILE,
       JSON.stringify({
         DATABASE_URL: externalDatabaseUrl,
+        REDIS_URL: process.env.INTEGRATION_REDIS_URL || DOCKER_REDIS_URL,
         mode: 'external',
       }),
     );
@@ -60,6 +62,7 @@ module.exports = async () => {
     TEST_ENV_FILE,
     JSON.stringify({
       DATABASE_URL: DOCKER_DATABASE_URL,
+      REDIS_URL: DOCKER_REDIS_URL,
       mode: 'docker',
     }),
   );

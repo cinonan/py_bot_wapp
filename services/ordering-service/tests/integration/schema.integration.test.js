@@ -9,9 +9,12 @@ const { createDependencies } = require('../../src/composition/createDependencies
 
 const TEST_ENV_FILE = path.join(__dirname, '.test-env.json');
 
+function getTestEnv() {
+  return JSON.parse(fs.readFileSync(TEST_ENV_FILE, 'utf8'));
+}
+
 function getTestDatabaseUrl() {
-  const env = JSON.parse(fs.readFileSync(TEST_ENV_FILE, 'utf8'));
-  return env.DATABASE_URL;
+  return getTestEnv().DATABASE_URL;
 }
 
 describe('ordering-service persistence integration', () => {
@@ -189,7 +192,8 @@ describe('ordering-service persistence integration', () => {
   });
 
   test('returns HTTP 200 from /health when PostgreSQL is accessible', async () => {
-    const deps = createDependencies({ databaseUrl });
+    const { REDIS_URL: redisUrl } = getTestEnv();
+    const deps = createDependencies({ databaseUrl, redisUrl });
     const app = createApp(deps);
 
     const response = await request(app).get('/health');
@@ -201,5 +205,8 @@ describe('ordering-service persistence integration', () => {
     });
 
     await deps.pool.end();
+    if (deps.redis.isOpen) {
+      await deps.redis.quit();
+    }
   });
 });

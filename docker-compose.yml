@@ -42,10 +42,13 @@ services:
     environment:
       PORT: 3001
       DATABASE_URL: postgresql://ordering:ordering_dev@postgres:5432/ordering_dev
+      REDIS_URL: redis://redis:6379
     ports:
       - '3001:3001'
     depends_on:
       postgres:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     networks:
       - backend-network

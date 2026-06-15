@@ -12,14 +12,14 @@ Contratos documentados en el bounded context de ordering (referencia PRD secció
 
 ## Acceptance criteria
 
-- [ ] Streams `bot:events` y `ordering:events` creados con Consumer Groups operativos.
-- [ ] Bot publica comando con metadatos obligatorios: `wamid`, `correlationId`, `phone`, `timestamp`.
-- [ ] Ordering consume, procesa y publica evento de respuesta correlacionado por `correlationId`.
-- [ ] Mensaje recibe `XACK` solo tras procesamiento exitoso.
-- [ ] Bot espera respuesta con timeout configurable; ante timeout envía mensaje de espera sin perder sesión.
-- [ ] Graceful shutdown: al recibir SIGTERM el consumidor completa o devuelve mensajes in-flight a PEL.
-- [ ] Prueba de integración verifica round-trip completo Bot → Ordering → Bot.
-- [ ] Contratos de mensajes documentados (comandos/eventos base + metadatos).
+- [x] Streams `bot:events` y `ordering:events` creados con Consumer Groups operativos.
+- [x] Bot publica comando con metadatos obligatorios: `wamid`, `correlationId`, `phone`, `timestamp`.
+- [x] Ordering consume, procesa y publica evento de respuesta correlacionado por `correlationId`.
+- [x] Mensaje recibe `XACK` solo tras procesamiento exitoso.
+- [x] Bot espera respuesta con timeout configurable; ante timeout envía mensaje de espera sin perder sesión.
+- [x] Graceful shutdown: al recibir SIGTERM el consumidor completa o devuelve mensajes in-flight a PEL.
+- [x] Prueba de integración verifica round-trip completo Bot → Ordering → Bot.
+- [x] Contratos de mensajes documentados (comandos/eventos base + metadatos).
 
 ## Blocked by
 
