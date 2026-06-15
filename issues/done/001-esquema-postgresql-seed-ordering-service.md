@@ -12,15 +12,15 @@ Verificable de forma independiente aplicando migraciones contra PostgreSQL vací
 
 ## Acceptance criteria
 
-- [ ] Existe `services/ordering-service/` con estructura Clean Architecture (`src/modules/ordering/domain|application|infrastructure`, `composition/`, `app.js`).
-- [ ] Migraciones SQL versionadas crean el DDL completo desde cero sin dependencia del esquema legado.
-- [ ] Script de seed carga productos de ejemplo con `activo = true` y datos mínimos reproducibles.
-- [ ] `pedidos.cliente_id` referencia `clientes.id` con `ON DELETE RESTRICT`.
-- [ ] `pedidos.estado` restringido por CHECK a `pendiente`, `en_camino`, `entregado`.
-- [ ] `detalle_pedidos` incluye `nombre_producto`, `precio_unitario` y `monto_total` generado.
-- [ ] Tablas `pedido_historial_estados` y `comandos_procesados` creadas con índices útiles.
-- [ ] Endpoint `/health` responde HTTP 200 cuando PostgreSQL está accesible.
-- [ ] Pruebas de integración confirman aplicación de migraciones y seed repetible en entorno de test.
+- [x] Existe `services/ordering-service/` con estructura Clean Architecture (`src/modules/ordering/domain|application|infrastructure`, `composition/`, `app.js`).
+- [x] Migraciones SQL versionadas crean el DDL completo desde cero sin dependencia del esquema legado.
+- [x] Script de seed carga productos de ejemplo con `activo = true` y datos mínimos reproducibles.
+- [x] `pedidos.cliente_id` referencia `clientes.id` con `ON DELETE RESTRICT`.
+- [x] `pedidos.estado` restringido por CHECK a `pendiente`, `en_camino`, `entregado`.
+- [x] `detalle_pedidos` incluye `nombre_producto`, `precio_unitario` y `monto_total` generado.
+- [x] Tablas `pedido_historial_estados` y `comandos_procesados` creadas con índices útiles.
+- [x] Endpoint `/health` responde HTTP 200 cuando PostgreSQL está accesible.
+- [x] Pruebas de integración confirman aplicación de migraciones y seed repetible en entorno de test.
 
 ## Blocked by
 
