@@ -16,8 +16,32 @@ const pingCommandSchema = streamEnvelopeSchema.extend({
   type: z.literal('Ping'),
 });
 
+const getClientByPhoneCommandSchema = streamEnvelopeSchema.extend({
+  type: z.literal('GetClientByPhone'),
+});
+
+const registerClientCommandSchema = streamEnvelopeSchema.extend({
+  type: z.literal('RegisterClient'),
+});
+
 const pongEventSchema = streamEnvelopeSchema.extend({
   type: z.literal('Pong'),
+});
+
+const clientFoundEventSchema = streamEnvelopeSchema.extend({
+  type: z.literal('ClientFound'),
+});
+
+const clientNotFoundEventSchema = streamEnvelopeSchema.extend({
+  type: z.literal('ClientNotFound'),
+});
+
+const clientRegisteredEventSchema = streamEnvelopeSchema.extend({
+  type: z.literal('ClientRegistered'),
+});
+
+const registerClientFailedEventSchema = streamEnvelopeSchema.extend({
+  type: z.literal('RegisterClientFailed'),
 });
 
 function parseStreamFields(fields) {
@@ -41,7 +65,13 @@ module.exports = {
   messageMetadataSchema,
   streamEnvelopeSchema,
   pingCommandSchema,
+  getClientByPhoneCommandSchema,
+  registerClientCommandSchema,
   pongEventSchema,
+  clientFoundEventSchema,
+  clientNotFoundEventSchema,
+  clientRegisteredEventSchema,
+  registerClientFailedEventSchema,
   parseStreamFields,
   parseStreamEnvelope,
 };

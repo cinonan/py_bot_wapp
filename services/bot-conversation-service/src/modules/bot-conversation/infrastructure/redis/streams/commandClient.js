@@ -45,6 +45,28 @@ function createStreamCommandClient({ redis, replyRegistry, replyTimeoutMs }) {
         payload: {},
       });
     },
+
+    async getClientByPhone({ wamid, phone }) {
+      const correlationId = randomUUID();
+      const timestamp = new Date().toISOString();
+
+      return this.sendCommand({
+        type: 'GetClientByPhone',
+        metadata: { wamid, correlationId, phone, timestamp },
+        payload: {},
+      });
+    },
+
+    async registerClient({ wamid, phone, payload }) {
+      const correlationId = randomUUID();
+      const timestamp = new Date().toISOString();
+
+      return this.sendCommand({
+        type: 'RegisterClient',
+        metadata: { wamid, correlationId, phone, timestamp },
+        payload,
+      });
+    },
   };
 }
 

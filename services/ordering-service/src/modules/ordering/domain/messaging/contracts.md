@@ -35,6 +35,8 @@ Todo mensaje en ambos streams incluye:
 | Comando | Payload | Respuesta |
 |---------|---------|-----------|
 | `Ping` | `{}` | `Pong` |
+| `GetClientByPhone` | `{}` | `ClientFound` / `ClientNotFound` |
+| `RegisterClient` | `{ nombre, direccion_principal }` | `ClientRegistered` / `RegisterClientFailed` |
 
 Comandos de negocio (`RegisterClient`, `GetProductCatalog`, etc.) se documentan en el PRD y se implementan en issues de features.
 
@@ -43,6 +45,10 @@ Comandos de negocio (`RegisterClient`, `GetProductCatalog`, etc.) se documentan 
 | Evento | Payload | Cuándo |
 |--------|---------|--------|
 | `Pong` | `{}` | Respuesta a `Ping` (health / tracer bullet) |
+| `ClientFound` | `{ client }` | Cliente existente para el teléfono consultado |
+| `ClientNotFound` | `{}` | Sin cliente registrado para el teléfono |
+| `ClientRegistered` | `{ client }` | Cliente creado exitosamente |
+| `RegisterClientFailed` | `{ reason, issues? \| message? }` | Validación o duplicado al registrar |
 
 ## Request-reply
 

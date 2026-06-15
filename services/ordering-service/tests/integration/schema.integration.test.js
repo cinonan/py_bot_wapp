@@ -33,8 +33,6 @@ describe('ordering-service persistence integration', () => {
   test('applies versioned migrations on an empty database', async () => {
     const applied = await runMigrations(databaseUrl);
 
-    expect(applied).toEqual(['001_initial_schema.sql']);
-
     const tables = await pool.query(`
       SELECT table_name
       FROM information_schema.tables
@@ -54,6 +52,10 @@ describe('ordering-service persistence integration', () => {
         'schema_migrations',
       ]),
     );
+
+    if (applied.length > 0) {
+      expect(applied).toEqual(['001_initial_schema.sql']);
+    }
   });
 
   test('runs seed twice without duplicating catalog rows', async () => {

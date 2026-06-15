@@ -3,6 +3,7 @@ const { checkRedisHealth } = require('./modules/bot-conversation/infrastructure/
 
 function createApp(deps) {
   const app = express();
+  app.use(express.json());
 
   app.get('/health', async (_req, res) => {
     try {
@@ -12,6 +13,10 @@ function createApp(deps) {
       res.status(503).json({ status: 'error', redis: 'disconnected' });
     }
   });
+
+  if (deps.webhookHandler) {
+    app.post('/webhook', deps.webhookHandler);
+  }
 
   return app;
 }

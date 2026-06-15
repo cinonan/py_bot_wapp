@@ -7,7 +7,7 @@
     "start": "node src/app.js",
     "migrate": "node scripts/migrate.js",
     "seed": "node scripts/seed.js",
-    "test": "jest"
+    "test": "jest && jest --config jest.integration.config.js"
   },
   "keywords": [],
   "author": "",

@@ -59,6 +59,7 @@ describe('Redis Streams request-reply integration', () => {
     await orderingDeps.streamConsumer.shutdown();
     await botDeps.redis.quit();
     await orderingDeps.redis.quit();
+    await orderingDeps.pool.end();
     await adminRedis.quit();
   });
 

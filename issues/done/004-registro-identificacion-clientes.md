@@ -12,15 +12,15 @@ Validación con Zod en dominio de Ordering; validadores conversacionales en domi
 
 ## Acceptance criteria
 
-- [ ] `GetClientByPhone` consulta PostgreSQL y responde con `ClientFound` o `ClientNotFound`.
-- [ ] `RegisterClient` persiste cliente con `telefono`, `nombre`, `direccion_principal` y responde `ClientRegistered`.
-- [ ] Bot reconoce teléfono al primer mensaje y consulta existencia vía stream.
-- [ ] Usuario nuevo pasa por registro de nombre y dirección principal con mensajes de error claros ante entrada vacía o inválida.
-- [ ] Usuario recurrente recibe saludo por nombre y transiciona a `CONFIRMING_ADDRESS`.
-- [ ] Menú bloqueado hasta identificación completa (estado no avanza a catálogo sin cliente registrado).
-- [ ] Sesión Redis persiste estado conversacional con TTL de una hora.
-- [ ] Pruebas unitarias de transiciones de estado y esquemas Zod de registro.
-- [ ] Prueba de integración: registro nuevo cliente visible en PostgreSQL tras flujo simulado.
+- [x] `GetClientByPhone` consulta PostgreSQL y responde con `ClientFound` o `ClientNotFound`.
+- [x] `RegisterClient` persiste cliente con `telefono`, `nombre`, `direccion_principal` y responde `ClientRegistered`.
+- [x] Bot reconoce teléfono al primer mensaje y consulta existencia vía stream.
+- [x] Usuario nuevo pasa por registro de nombre y dirección principal con mensajes de error claros ante entrada vacía o inválida.
+- [x] Usuario recurrente recibe saludo por nombre y transiciona a `CONFIRMING_ADDRESS`.
+- [x] Menú bloqueado hasta identificación completa (estado no avanza a catálogo sin cliente registrado).
+- [x] Sesión Redis persiste estado conversacional con TTL de una hora.
+- [x] Pruebas unitarias de transiciones de estado y esquemas Zod de registro.
+- [x] Prueba de integración: registro nuevo cliente visible en PostgreSQL tras flujo simulado.
 
 ## Blocked by
 
