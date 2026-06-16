@@ -1,9 +1,16 @@
 const express = require('express');
 const { checkRedisHealth } = require('./modules/bot-conversation/infrastructure/redis/healthCheck');
+const { createWebhookSignatureMiddleware } = require('./modules/bot-conversation/infrastructure/meta/webhookSignatureMiddleware');
 
 function createApp(deps) {
   const app = express();
-  app.use(express.json());
+  app.use(
+    express.json({
+      verify: (req, _res, buf) => {
+        req.rawBody = buf;
+      },
+    }),
+  );
 
   app.get('/health', async (_req, res) => {
     try {
@@ -14,8 +21,20 @@ function createApp(deps) {
     }
   });
 
+  if (deps.webhookVerifyHandler) {
+    app.get('/webhook', deps.webhookVerifyHandler);
+  }
+
   if (deps.webhookHandler) {
-    app.post('/webhook', deps.webhookHandler);
+    const signatureMiddleware = deps.webhookSignatureValidator
+      ? createWebhookSignatureMiddleware({ signatureValidator: deps.webhookSignatureValidator })
+      : null;
+
+    if (signatureMiddleware) {
+      app.post('/webhook', signatureMiddleware, deps.webhookHandler);
+    } else {
+      app.post('/webhook', deps.webhookHandler);
+    }
   }
 
   return app;

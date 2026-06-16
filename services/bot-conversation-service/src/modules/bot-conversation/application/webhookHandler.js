@@ -19,6 +19,7 @@ function createWebhookHandler({
   handleConversationMessage,
   messageSender,
   parseIncomingTextMessage,
+  isDeliveryStatusPayload = () => false,
   awaitProcessing = false,
 }) {
   async function processIncoming(incoming) {
@@ -30,6 +31,11 @@ function createWebhookHandler({
   }
 
   return async function handleWebhook(req, res) {
+    if (isDeliveryStatusPayload(req.body)) {
+      res.sendStatus(200);
+      return;
+    }
+
     const incoming = parseIncomingTextMessage(req.body);
     res.sendStatus(200);
 

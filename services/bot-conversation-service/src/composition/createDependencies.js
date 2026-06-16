@@ -19,15 +19,30 @@ const {
 const {
   parseIncomingTextMessage,
 } = require('../modules/bot-conversation/infrastructure/meta/incomingMessageParser');
+const {
+  createWebhookSignatureValidator,
+} = require('../modules/bot-conversation/infrastructure/meta/webhookSignatureValidator');
+const {
+  createWebhookVerifyHandler,
+} = require('../modules/bot-conversation/infrastructure/meta/webhookVerifyHandler');
+const {
+  isDeliveryStatusPayload,
+} = require('../modules/bot-conversation/infrastructure/meta/deliveryStatusDetector');
+const { SESSION_TTL_SECONDS } = require('../modules/bot-conversation/infrastructure/redis/sessionStore');
 
 function createDependencies(config = {}) {
   const redisUrl = config.redisUrl || process.env.REDIS_URL;
   const replyTimeoutMs = Number(
     config.replyTimeoutMs || process.env.STREAM_REPLY_TIMEOUT_MS || 5000,
   );
+  const verifyToken = config.verifyToken || process.env.WA_VERIFY_TOKEN;
+  const appSecret = config.appSecret || process.env.WA_APP_SECRET;
+  const sessionTtlSeconds = Number(
+    config.sessionTtlSeconds || process.env.SESSION_TTL_SECONDS || SESSION_TTL_SECONDS,
+  );
 
   const redis = createRedisClient(redisUrl);
-  const sessionStore = createSessionStore({ redis });
+  const sessionStore = createSessionStore({ redis, ttlSeconds: sessionTtlSeconds });
   const replyRegistry = createReplyRegistry();
   const streamCommandClient = createStreamCommandClient({
     redis,
@@ -49,13 +64,18 @@ function createDependencies(config = {}) {
     handleConversationMessage,
     messageSender,
     parseIncomingTextMessage,
+    isDeliveryStatusPayload,
     awaitProcessing: awaitWebhookProcessing,
   });
+  const webhookVerifyHandler = createWebhookVerifyHandler({ verifyToken });
+  const webhookSignatureValidator = createWebhookSignatureValidator({ appSecret });
 
   const appDeps = {
     redis,
     streamEventConsumer,
     webhookHandler,
+    webhookVerifyHandler,
+    webhookSignatureValidator,
   };
 
   if (config._exposeInternals) {

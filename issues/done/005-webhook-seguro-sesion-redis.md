@@ -12,14 +12,14 @@ Verificable con tests del validador de firma y simulación de POST válido/invá
 
 ## Acceptance criteria
 
-- [ ] `GET /webhook` valida `hub.verify_token` contra `WA_VERIFY_TOKEN` y responde challenge de Meta.
-- [ ] `POST /webhook` rechaza con HTTP 401/403 si `X-Hub-Signature-256` es inválida o ausente.
-- [ ] `POST /webhook` con firma válida responde HTTP 200 en menos de 5 s tras encolar procesamiento.
-- [ ] Payloads de status/delivery no disparan máquina de estados.
-- [ ] Adaptador Redis de sesión operativo con TTL configurable (default 1 h).
-- [ ] Sin secretos hardcodeados; composition root inyecta configuración desde entorno.
-- [ ] Pruebas unitarias del validador HMAC (payload + secreto → aceptar/rechazar).
-- [ ] Prueba de integración: POST firmado correctamente retorna 200; POST sin firma retorna 401/403.
+- [x] `GET /webhook` valida `hub.verify_token` contra `WA_VERIFY_TOKEN` y responde challenge de Meta.
+- [x] `POST /webhook` rechaza con HTTP 401/403 si `X-Hub-Signature-256` es inválida o ausente.
+- [x] `POST /webhook` con firma válida responde HTTP 200 en menos de 5 s tras encolar procesamiento.
+- [x] Payloads de status/delivery no disparan máquina de estados.
+- [x] Adaptador Redis de sesión operativo con TTL configurable (default 1 h).
+- [x] Sin secretos hardcodeados; composition root inyecta configuración desde entorno.
+- [x] Pruebas unitarias del validador HMAC (payload + secreto → aceptar/rechazar).
+- [x] Prueba de integración: POST firmado correctamente retorna 200; POST sin firma retorna 401/403.
 
 ## Blocked by
 
