@@ -84,6 +84,36 @@ function isMenuAccessAllowed(session) {
   return true;
 }
 
+function validateCartQuantity(text) {
+  const value = normalizeText(text);
+
+  if (!/^\d+$/.test(value)) {
+    return {
+      valid: false,
+      message: 'Cantidad inválida. Debe ser un número entero mayor a 0. Ejemplo: 2',
+    };
+  }
+
+  const quantity = Number(value);
+  if (!Number.isInteger(quantity) || quantity <= 0) {
+    return {
+      valid: false,
+      message: 'Cantidad inválida. Debe ser un número entero mayor a 0. Ejemplo: 2',
+    };
+  }
+
+  return { valid: true, value: quantity };
+}
+
+function parseProvidingMenuChoice(text) {
+  const value = normalizeText(text);
+  if (value === '1' || value === '2') {
+    return value;
+  }
+
+  return null;
+}
+
 module.exports = {
   normalizeText,
   validateRegistrationName,
@@ -91,4 +121,6 @@ module.exports = {
   isMenuAccessAttempt,
   parseProductSelectionId,
   isMenuAccessAllowed,
+  validateCartQuantity,
+  parseProvidingMenuChoice,
 };

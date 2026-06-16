@@ -9,6 +9,10 @@ const {
   buildMenuAccessTransition,
   handleSelectingProductTurn,
   mapProductLookupResponse,
+  handleAwaitingQuantityTurn,
+  mapAddToCartResponse,
+  handleProvidingMenuTurn,
+  mapGetCartForConfirmResponse,
 } = require('../../src/modules/bot-conversation/domain/conversation/flow');
 
 describe('conversation state transitions', () => {
@@ -183,5 +187,84 @@ describe('conversation state transitions', () => {
 
     expect(transition.session.state).toBe(CONVERSATION_STATE.SELECTING_PRODUCT);
     expect(transition.replies[0]).toContain('No encontré');
+  });
+
+  test('maps ProductResolved to awaiting quantity state', () => {
+    const session = {
+      state: CONVERSATION_STATE.SELECTING_PRODUCT,
+      metadata: { catalogCache: [{ id: 1, nombre: 'Arroz', precio: '10.00' }] },
+    };
+
+    const transition = mapProductLookupResponse(session, {
+      type: 'ProductResolved',
+      payload: JSON.stringify({
+        product: { id: 1, nombre: 'Arroz', precio: '10.00' },
+      }),
+    }, 1);
+
+    expect(transition.session.state).toBe(CONVERSATION_STATE.AWAITING_QUANTITY);
+    expect(transition.replies[1]).toContain('Indica la cantidad');
+  });
+
+  test('invalid quantity keeps awaiting quantity state without add command', () => {
+    const session = {
+      state: CONVERSATION_STATE.AWAITING_QUANTITY,
+      metadata: { selectedProduct: { id: 1, nombre: 'Arroz', precio: '10.00' } },
+    };
+
+    const transition = handleAwaitingQuantityTurn(session, '0');
+
+    expect(transition.shouldAddToCart).toBe(false);
+    expect(transition.session.state).toBe(CONVERSATION_STATE.AWAITING_QUANTITY);
+  });
+
+  test('maps CartUpdated to providing menu with subtotal message', () => {
+    const session = {
+      state: CONVERSATION_STATE.AWAITING_QUANTITY,
+      metadata: { selectedProduct: { id: 1, nombre: 'Arroz', precio: '10.00' } },
+    };
+
+    const transition = mapAddToCartResponse(
+      session,
+      {
+        type: 'CartUpdated',
+        payload: JSON.stringify({
+          items: [
+            {
+              productId: 1,
+              cantidad: 2,
+              precio_unitario: '10.00',
+              nombre_producto: 'Arroz',
+            },
+          ],
+          subtotal: '20.00',
+        }),
+      },
+      { productId: 1, cantidad: 2 },
+    );
+
+    expect(transition.session.state).toBe(CONVERSATION_STATE.PROVIDING_MENU);
+    expect(transition.replies[0]).toContain('Subtotal acumulado');
+    expect(transition.session.metadata.selectedProduct).toBeUndefined();
+  });
+
+  test('providing menu option 2 advances toward confirmation when cart has items', () => {
+    const session = {
+      state: CONVERSATION_STATE.PROVIDING_MENU,
+      metadata: {},
+    };
+
+    const choice = handleProvidingMenuTurn(session, '2');
+    expect(choice.shouldGetCart).toBe(true);
+
+    const confirmed = mapGetCartForConfirmResponse(session, {
+      type: 'CartUpdated',
+      payload: JSON.stringify({
+        items: [{ productId: 1, cantidad: 1, precio_unitario: '10.00', nombre_producto: 'Arroz' }],
+        subtotal: '10.00',
+      }),
+    });
+
+    expect(confirmed.session.state).toBe(CONVERSATION_STATE.CONFIRMING_ORDER);
   });
 });

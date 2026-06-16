@@ -7,7 +7,11 @@ const { createDlqPublisher } = require('../modules/ordering/infrastructure/redis
 const { createGetClientByPhone } = require('../modules/ordering/application/getClientByPhone');
 const { createRegisterClient } = require('../modules/ordering/application/registerClient');
 const { createGetProductCatalog } = require('../modules/ordering/application/getProductCatalog');
+const { createCartStore } = require('../modules/ordering/infrastructure/redis/cartStore');
 const { createGetProductById } = require('../modules/ordering/application/getProductById');
+const { createAddToCart } = require('../modules/ordering/application/addToCart');
+const { createGetCart } = require('../modules/ordering/application/getCart');
+const { createClearCart } = require('../modules/ordering/application/clearCart');
 const { createStreamCommandDispatcher } = require('../modules/ordering/application/streamCommandDispatcher');
 const { createOrderingStreamConsumer } = require('../modules/ordering/infrastructure/redis/orderingStreamConsumer');
 const { createJwtVerifier } = require('../modules/ordering/infrastructure/http/jwtVerifier');
@@ -28,12 +32,19 @@ function createDependencies(config = {}) {
   const registerClient = createRegisterClient({ clientRepository });
   const getProductCatalog = createGetProductCatalog({ productRepository });
   const getProductById = createGetProductById({ productRepository });
+  const cartStore = createCartStore({ redis });
+  const addToCart = createAddToCart({ cartStore, productRepository });
+  const getCart = createGetCart({ cartStore });
+  const clearCart = createClearCart({ cartStore });
   const dispatchStreamCommand = createStreamCommandDispatcher({
     eventPublisher,
     getClientByPhone,
     registerClient,
     getProductCatalog,
     getProductById,
+    addToCart,
+    getCart,
+    clearCart,
   });
   const streamConsumer = createOrderingStreamConsumer({
     redis,
@@ -57,6 +68,7 @@ function createDependencies(config = {}) {
       eventPublisher,
       dispatchStreamCommand,
       publishToDlq,
+      cartStore,
     };
   }
 

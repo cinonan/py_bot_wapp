@@ -32,6 +32,18 @@ const getProductByIdCommandSchema = streamEnvelopeSchema.extend({
   type: z.literal('GetProductById'),
 });
 
+const addToCartCommandSchema = streamEnvelopeSchema.extend({
+  type: z.literal('AddToCart'),
+});
+
+const getCartCommandSchema = streamEnvelopeSchema.extend({
+  type: z.literal('GetCart'),
+});
+
+const clearCartCommandSchema = streamEnvelopeSchema.extend({
+  type: z.literal('ClearCart'),
+});
+
 const pongEventSchema = streamEnvelopeSchema.extend({
   type: z.literal('Pong'),
 });
@@ -68,6 +80,14 @@ const catalogLoadFailedEventSchema = streamEnvelopeSchema.extend({
   type: z.literal('CatalogLoadFailed'),
 });
 
+const cartUpdatedEventSchema = streamEnvelopeSchema.extend({
+  type: z.literal('CartUpdated'),
+});
+
+const addToCartFailedEventSchema = streamEnvelopeSchema.extend({
+  type: z.literal('AddToCartFailed'),
+});
+
 const orderPlaceFailedEventSchema = streamEnvelopeSchema.extend({
   type: z.literal('OrderPlaceFailed'),
 });
@@ -101,6 +121,9 @@ module.exports = {
   registerClientCommandSchema,
   getProductCatalogCommandSchema,
   getProductByIdCommandSchema,
+  addToCartCommandSchema,
+  getCartCommandSchema,
+  clearCartCommandSchema,
   pongEventSchema,
   clientFoundEventSchema,
   clientNotFoundEventSchema,
@@ -110,6 +133,8 @@ module.exports = {
   productResolvedEventSchema,
   productNotFoundEventSchema,
   catalogLoadFailedEventSchema,
+  cartUpdatedEventSchema,
+  addToCartFailedEventSchema,
   orderPlaceFailedEventSchema,
   orderDispatchFailedEventSchema,
   parseStreamFields,

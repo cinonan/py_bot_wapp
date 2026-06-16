@@ -12,15 +12,15 @@ Verificable añadiendo varios productos y comprobando carrito Redis + mensajes a
 
 ## Acceptance criteria
 
-- [ ] `AddToCart` lee precio/nombre actuales de PostgreSQL y persiste snapshot en carrito Redis (TTL 1 h).
-- [ ] Bot envía únicamente `productId` y `cantidad`; nunca precio ni nombre en comando.
-- [ ] Mismo `productId` añadido dos veces fusiona cantidades en un ítem.
-- [ ] `CartUpdated` incluye subtotal; Bot lo muestra al usuario.
-- [ ] Cantidades inválidas rechazadas con mensaje claro sin vaciar carrito.
-- [ ] Usuario puede añadir N productos diferentes antes de confirmar.
-- [ ] Estado `PROVIDING_MENU` permite volver al menú o avanzar hacia confirmación.
-- [ ] Pruebas unitarias: merge de carrito, cálculo de subtotales, validación Zod de cantidades.
-- [ ] Prueba de integración: `AddToCart` congela snapshot aunque precio cambie en PostgreSQL después.
+- [x] `AddToCart` lee precio/nombre actuales de PostgreSQL y persiste snapshot en carrito Redis (TTL 1 h).
+- [x] Bot envía únicamente `productId` y `cantidad`; nunca precio ni nombre en comando.
+- [x] Mismo `productId` añadido dos veces fusiona cantidades en un ítem.
+- [x] `CartUpdated` incluye subtotal; Bot lo muestra al usuario.
+- [x] Cantidades inválidas rechazadas con mensaje claro sin vaciar carrito.
+- [x] Usuario puede añadir N productos diferentes antes de confirmar.
+- [x] Estado `PROVIDING_MENU` permite volver al menú o avanzar hacia confirmación.
+- [x] Pruebas unitarias: merge de carrito, cálculo de subtotales, validación Zod de cantidades.
+- [x] Prueba de integración: `AddToCart` congela snapshot aunque precio cambie en PostgreSQL después.
 
 ## Blocked by
 

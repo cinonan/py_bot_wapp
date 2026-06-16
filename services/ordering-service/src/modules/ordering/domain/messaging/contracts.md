@@ -39,6 +39,9 @@ Todo mensaje en ambos streams incluye:
 | `RegisterClient` | `{ nombre, direccion_principal }` | `ClientRegistered` / `RegisterClientFailed` |
 | `GetProductCatalog` | `{}` | `CatalogLoaded` / `CatalogLoadFailed` |
 | `GetProductById` | `{ productId }` | `ProductResolved` / `ProductNotFound` |
+| `AddToCart` | `{ productId, cantidad }` | `CartUpdated` / `AddToCartFailed` |
+| `GetCart` | `{}` | `CartUpdated` |
+| `ClearCart` | `{}` | `CartUpdated` |
 
 Comandos de negocio (`RegisterClient`, `GetProductCatalog`, etc.) se documentan en el PRD y se implementan en issues de features.
 
@@ -55,6 +58,8 @@ Comandos de negocio (`RegisterClient`, `GetProductCatalog`, etc.) se documentan 
 | `ProductResolved` | `{ product: { id, nombre, precio } }` | Producto activo encontrado |
 | `ProductNotFound` | `{}` | Producto inexistente o inactivo |
 | `CatalogLoadFailed` | `{ reason, issues? \| message? }` | Error al obtener catálogo |
+| `CartUpdated` | `{ items: [{ productId, cantidad, precio_unitario, nombre_producto }], subtotal }` | Carrito modificado o consultado |
+| `AddToCartFailed` | `{ reason, issues? \| message? }` | Validación o producto inexistente al agregar |
 | `OrderPlaceFailed` | `{ reason, issues? \| message? }` | Error al colocar pedido |
 | `OrderDispatchFailed` | `{ reason, issues? \| message? }` | Error al despachar pedido administrativo |
 

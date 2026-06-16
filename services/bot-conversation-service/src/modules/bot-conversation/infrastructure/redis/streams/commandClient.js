@@ -10,6 +10,9 @@ const { ReplyTimeoutError } = require('./replyRegistry');
  * @property {(params: { wamid: string, phone: string, payload: object }) => Promise<object>} registerClient
  * @property {(params: { wamid: string, phone: string }) => Promise<object>} getProductCatalog
  * @property {(params: { wamid: string, phone: string, productId: number }) => Promise<object>} getProductById
+ * @property {(params: { wamid: string, phone: string, productId: number, cantidad: number }) => Promise<object>} addToCart
+ * @property {(params: { wamid: string, phone: string }) => Promise<object>} getCart
+ * @property {(params: { wamid: string, phone: string }) => Promise<object>} clearCart
  */
 
 /**
@@ -100,6 +103,39 @@ function createStreamCommandClient({ redis, replyRegistry, replyTimeoutMs }) {
         type: 'GetProductById',
         metadata: { wamid, correlationId, phone, timestamp },
         payload: { productId },
+      });
+    },
+
+    async addToCart({ wamid, phone, productId, cantidad }) {
+      const correlationId = randomUUID();
+      const timestamp = new Date().toISOString();
+
+      return this.sendCommand({
+        type: 'AddToCart',
+        metadata: { wamid, correlationId, phone, timestamp },
+        payload: { productId, cantidad },
+      });
+    },
+
+    async getCart({ wamid, phone }) {
+      const correlationId = randomUUID();
+      const timestamp = new Date().toISOString();
+
+      return this.sendCommand({
+        type: 'GetCart',
+        metadata: { wamid, correlationId, phone, timestamp },
+        payload: {},
+      });
+    },
+
+    async clearCart({ wamid, phone }) {
+      const correlationId = randomUUID();
+      const timestamp = new Date().toISOString();
+
+      return this.sendCommand({
+        type: 'ClearCart',
+        metadata: { wamid, correlationId, phone, timestamp },
+        payload: {},
       });
     },
   };

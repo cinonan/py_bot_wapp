@@ -5,14 +5,20 @@ const {
   isMenuAccessAttempt,
   parseProductSelectionId,
   isMenuAccessAllowed,
+  validateCartQuantity,
+  parseProvidingMenuChoice,
 } = require('./validators');
 const { parseClientFoundPayload } = require('../messaging/clientEventSchemas');
 const { parseCatalogLoadedPayload, parseProductResolvedPayload } = require('../messaging/catalogEventSchemas');
+const { parseCartUpdatedPayload } = require('../messaging/cartEventSchemas');
 const {
   formatCatalogMenu,
   formatEmptyCatalogMessage,
   formatCurrency,
 } = require('./catalogFormatting');
+const {
+  formatCartAddedMessage,
+} = require('./cartFormatting');
 
 const MESSAGES = {
   askName:
@@ -37,6 +43,18 @@ const MESSAGES = {
     'No encontré ese producto. Por favor elige un ID válido del menú.',
   productLookupFailed:
     'No pudimos verificar el producto. Intenta de nuevo en un momento.',
+  invalidQuantity:
+    'Cantidad inválida. Debe ser un número entero mayor a 0. Ejemplo: 2',
+  missingSelectedProduct:
+    'Perdí el producto seleccionado. Elige nuevamente un ID del menú.',
+  addToCartFailed:
+    'No pudimos agregar el producto al carrito. Intenta de nuevo en un momento.',
+  emptyCartOnConfirm:
+    'Tu carrito está vacío. Primero agrega al menos un producto.',
+  invalidProvidingMenuChoice:
+    'Responde con una opción válida:\n1. Ver Menú\n2. Confirmar Pedido',
+  confirmOrderReady:
+    'Perfecto. Continuaremos con la confirmación de tu pedido en el siguiente paso.',
 };
 
 function mapClientLookupResponse(response) {
@@ -315,10 +333,12 @@ function mapProductLookupResponse(session, response, productId) {
     const { product } = parseProductResolvedPayload(response.payload);
     return {
       replies: [
-        `Producto seleccionado: *${product.nombre}* (${formatCurrency(product.precio)}).`,
+        `Producto seleccionado: *${product.nombre}* (${formatCurrency(product.precio)} c/u).`,
+        `Indica la cantidad para *${product.nombre}*.`,
       ],
       session: {
         ...session,
+        state: CONVERSATION_STATE.AWAITING_QUANTITY,
         metadata: {
           ...session.metadata,
           selectedProduct: product,
@@ -329,6 +349,155 @@ function mapProductLookupResponse(session, response, productId) {
 
   return {
     replies: [MESSAGES.productLookupFailed],
+    session,
+  };
+}
+
+function handleAwaitingQuantityTurn(session, text) {
+  if (isMenuAccessAttempt(text)) {
+    return buildMenuAccessTransition(session);
+  }
+
+  const validation = validateCartQuantity(text);
+  if (!validation.valid) {
+    return {
+      replies: [validation.message],
+      session,
+      shouldAddToCart: false,
+    };
+  }
+
+  const selectedProduct = session.metadata?.selectedProduct;
+  if (!selectedProduct?.id) {
+    return {
+      replies: [MESSAGES.missingSelectedProduct],
+      session: {
+        ...session,
+        state: CONVERSATION_STATE.SELECTING_PRODUCT,
+        metadata: {
+          ...session.metadata,
+          selectedProduct: undefined,
+        },
+      },
+      shouldAddToCart: false,
+    };
+  }
+
+  return {
+    replies: [],
+    session,
+    shouldAddToCart: true,
+    addToCartPayload: {
+      productId: selectedProduct.id,
+      cantidad: validation.value,
+    },
+  };
+}
+
+function mapAddToCartResponse(session, response, addToCartPayload) {
+  if (response.timedOut) {
+    return {
+      replies: [response.waitingMessage],
+      session,
+    };
+  }
+
+  if (response.type === 'AddToCartFailed') {
+    return {
+      replies: [MESSAGES.addToCartFailed],
+      session,
+    };
+  }
+
+  if (response.type === 'CartUpdated') {
+    const { items, subtotal } = parseCartUpdatedPayload(response.payload);
+    const selectedProduct = session.metadata?.selectedProduct;
+    const addedItem = items.find((item) => item.productId === addToCartPayload.productId);
+
+    const metadata = { ...session.metadata };
+    delete metadata.selectedProduct;
+
+    return {
+      replies: [
+        formatCartAddedMessage({
+          addedItem: addedItem || {
+            productId: addToCartPayload.productId,
+            cantidad: addToCartPayload.cantidad,
+            nombre_producto: selectedProduct?.nombre || 'Producto',
+            precio_unitario: selectedProduct?.precio || '0.00',
+          },
+          items,
+          subtotal,
+        }),
+      ],
+      session: {
+        ...session,
+        state: CONVERSATION_STATE.PROVIDING_MENU,
+        metadata,
+      },
+    };
+  }
+
+  return {
+    replies: [MESSAGES.addToCartFailed],
+    session,
+  };
+}
+
+function handleProvidingMenuTurn(session, text) {
+  if (isMenuAccessAttempt(text)) {
+    return buildMenuAccessTransition(session);
+  }
+
+  const choice = parseProvidingMenuChoice(text);
+  if (!choice) {
+    return {
+      replies: [MESSAGES.invalidProvidingMenuChoice],
+      session,
+      shouldGetCart: false,
+    };
+  }
+
+  if (choice === '1') {
+    return buildMenuAccessTransition(session);
+  }
+
+  return {
+    replies: [],
+    session,
+    shouldGetCart: true,
+    shouldConfirmOrder: true,
+  };
+}
+
+function mapGetCartForConfirmResponse(session, response) {
+  if (response.timedOut) {
+    return {
+      replies: [response.waitingMessage],
+      session,
+    };
+  }
+
+  if (response.type === 'CartUpdated') {
+    const { items } = parseCartUpdatedPayload(response.payload);
+    if (!items.length) {
+      return {
+        replies: [MESSAGES.emptyCartOnConfirm],
+        session,
+      };
+    }
+
+    return {
+      replies: [MESSAGES.confirmOrderReady],
+      session: {
+        ...session,
+        state: CONVERSATION_STATE.CONFIRMING_ORDER,
+      },
+    };
+  }
+
+  return {
+    replies: [MESSAGES.addToCartFailed],
     session,
   };
 }
@@ -346,4 +515,8 @@ module.exports = {
   handleAwaitingCatalogTurn,
   handleSelectingProductTurn,
   mapProductLookupResponse,
+  handleAwaitingQuantityTurn,
+  mapAddToCartResponse,
+  handleProvidingMenuTurn,
+  mapGetCartForConfirmResponse,
 };
