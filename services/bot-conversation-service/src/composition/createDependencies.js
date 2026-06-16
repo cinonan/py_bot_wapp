@@ -48,17 +48,25 @@ function createDependencies(config = {}) {
     awaitProcessing: awaitWebhookProcessing,
   });
 
-  return {
+  const appDeps = {
     redis,
-    sessionStore,
-    replyRegistry,
-    streamCommandClient,
     streamEventConsumer,
-    messageSender,
-    handleConversationMessage,
     webhookHandler,
-    replyTimeoutMs,
   };
+
+  if (config._exposeInternals) {
+    return {
+      ...appDeps,
+      sessionStore,
+      replyRegistry,
+      streamCommandClient,
+      messageSender,
+      handleConversationMessage,
+      replyTimeoutMs,
+    };
+  }
+
+  return appDeps;
 }
 
 module.exports = { createDependencies };

@@ -3,6 +3,17 @@ const { STREAM_BOT_EVENTS } = require('../../../domain/messaging/constants');
 const { messageMetadataSchema } = require('../../../domain/messaging/messageSchemas');
 const { ReplyTimeoutError } = require('./replyRegistry');
 
+/**
+ * @typedef {object} StreamCommandPort
+ * @property {(params: { wamid: string, phone: string }) => Promise<object>} sendPing
+ * @property {(params: { wamid: string, phone: string }) => Promise<object>} getClientByPhone
+ * @property {(params: { wamid: string, phone: string, payload: object }) => Promise<object>} registerClient
+ */
+
+/**
+ * @param {{ redis: import('redis').RedisClientType, replyRegistry: object, replyTimeoutMs: number }} deps
+ * @returns {StreamCommandPort & { sendCommand: Function }}
+ */
 function createStreamCommandClient({ redis, replyRegistry, replyTimeoutMs }) {
   return {
     async sendCommand({ type, metadata, payload = {} }) {

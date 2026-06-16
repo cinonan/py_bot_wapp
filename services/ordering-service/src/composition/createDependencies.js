@@ -4,7 +4,7 @@ const { createRedisClient } = require('../modules/ordering/infrastructure/redis/
 const { createStreamPublisher } = require('../modules/ordering/infrastructure/redis/streamPublisher');
 const { createGetClientByPhone } = require('../modules/ordering/application/getClientByPhone');
 const { createRegisterClient } = require('../modules/ordering/application/registerClient');
-const { createHandleStreamCommand } = require('../modules/ordering/application/handleStreamCommand');
+const { createStreamCommandDispatcher } = require('../modules/ordering/application/streamCommandDispatcher');
 const { createOrderingStreamConsumer } = require('../modules/ordering/infrastructure/redis/orderingStreamConsumer');
 
 function createDependencies(config = {}) {
@@ -17,18 +17,31 @@ function createDependencies(config = {}) {
   const eventPublisher = createStreamPublisher({ redis });
   const getClientByPhone = createGetClientByPhone({ clientRepository });
   const registerClient = createRegisterClient({ clientRepository });
-  const handleStreamCommand = createHandleStreamCommand({
+  const dispatchStreamCommand = createStreamCommandDispatcher({
     eventPublisher,
     getClientByPhone,
     registerClient,
   });
-  const streamConsumer = createOrderingStreamConsumer({ redis, handleStreamCommand });
+  const streamConsumer = createOrderingStreamConsumer({
+    redis,
+    dispatchStreamCommand,
+  });
 
-  return {
+  const appDeps = {
     pool,
     redis,
     streamConsumer,
   };
+
+  if (config._exposeInternals) {
+    return {
+      ...appDeps,
+      eventPublisher,
+      dispatchStreamCommand,
+    };
+  }
+
+  return appDeps;
 }
 
 module.exports = { createDependencies };

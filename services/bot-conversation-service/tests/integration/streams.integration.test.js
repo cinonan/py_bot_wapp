@@ -1,10 +1,10 @@
 const fs = require('fs');
 const path = require('path');
 const { createClient } = require('redis');
-const { createDependencies: createBotDependencies } = require('../../src/composition/createDependencies');
+const { createTestDependencies: createBotDependencies } = require('../../src/composition/createTestDependencies');
 const {
-  createDependencies: createOrderingDependencies,
-} = require('../../../ordering-service/src/composition/createDependencies');
+  createTestDependencies: createOrderingDependencies,
+} = require('../../../ordering-service/src/composition/createTestDependencies');
 const {
   STREAM_BOT_EVENTS,
   STREAM_ORDERING_EVENTS,

@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const { Pool } = require('pg');
 const { createClient } = require('redis');
-const { createDependencies } = require('../../src/composition/createDependencies');
+const { createTestDependencies } = require('../../src/composition/createTestDependencies');
 
 const TEST_ENV_FILE = path.join(__dirname, '.test-env.json');
 
@@ -35,10 +35,10 @@ describe('ordering-service client commands integration', () => {
     await adminRedis.flushDb();
     await adminRedis.quit();
 
-    deps = createDependencies({ databaseUrl, redisUrl });
+    deps = createTestDependencies({ databaseUrl, redisUrl });
     const {
-      createDependencies: createBotDependencies,
-    } = require('../../../bot-conversation-service/src/composition/createDependencies');
+      createTestDependencies: createBotDependencies,
+    } = require('../../../bot-conversation-service/src/composition/createTestDependencies');
     botDeps = createBotDependencies({ redisUrl, replyTimeoutMs: 5000 });
 
     await deps.redis.connect();

@@ -3,10 +3,10 @@ const path = require('path');
 const { createClient } = require('redis');
 const { runMigrations } = require('../../../ordering-service/scripts/migrate');
 const { runDockerCompose } = require('../../../ordering-service/tests/integration/dockerCompose');
-const { createDependencies: createBotDependencies } = require('../../src/composition/createDependencies');
+const { createTestDependencies: createBotDependencies } = require('../../src/composition/createTestDependencies');
 const {
-  createDependencies: createOrderingDependencies,
-} = require('../../../ordering-service/src/composition/createDependencies');
+  createTestDependencies: createOrderingDependencies,
+} = require('../../../ordering-service/src/composition/createTestDependencies');
 const {
   createCollectingMessageSender,
 } = require('../../src/modules/bot-conversation/infrastructure/messaging/messageSender');

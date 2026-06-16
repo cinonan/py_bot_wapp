@@ -35,5 +35,6 @@ Contratos documentados en el bounded context de ordering (referencia PRD secció
 - User story 66
 - User story 82
 
-## Alcance reproceso: 
-solo refactor incremental
+## Alcance reproceso
+
+Solo refactor incremental alineado a SAD § 3.1 (dispatcher, handlers dedicados, composition root).
