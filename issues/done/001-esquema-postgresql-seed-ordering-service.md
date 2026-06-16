@@ -43,5 +43,6 @@ None - can start immediately
 - User story 78
 - User story 79
 
-## Alcance reproceso: 
-solo refactor incremental
+## Alcance reproceso
+
+Solo refactor incremental a SAD § 3.1 (sin cambiar criterios de aceptación).

@@ -26,12 +26,7 @@ function createDependencies(config = {}) {
 
   return {
     pool,
-    clientRepository,
     redis,
-    eventPublisher,
-    getClientByPhone,
-    registerClient,
-    handleStreamCommand,
     streamConsumer,
   };
 }

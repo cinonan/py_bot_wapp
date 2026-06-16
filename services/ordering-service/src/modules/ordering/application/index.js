@@ -1,6 +1,11 @@
-/**
- * Ordering bounded context — application layer placeholder.
- * Use cases (PlaceOrder, AddToCart, etc.) will be added in feature issues.
- */
+const { createGetClientByPhone } = require('./getClientByPhone');
+const { createRegisterClient } = require('./registerClient');
+const { createHandleStreamCommand } = require('./handleStreamCommand');
+const { createOrderingStreamConsumer } = require('./startStreamConsumer');
 
-module.exports = {};
+module.exports = {
+  createGetClientByPhone,
+  createRegisterClient,
+  createHandleStreamCommand,
+  createOrderingStreamConsumer,
+};

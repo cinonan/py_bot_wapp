@@ -1,4 +1,5 @@
 const { ZodError } = require('zod');
+const { DuplicateClientError } = require('../domain/client/duplicateClientError');
 const {
   pingCommandSchema,
   getClientByPhoneCommandSchema,
@@ -19,6 +20,7 @@ function createHandleStreamCommand({ eventPublisher, getClientByPhone, registerC
   }
 
   async function handlePing(envelope) {
+    pingCommandSchema.parse(envelope);
     await publishEvent(envelope, 'Pong', {});
     return true;
   }
@@ -49,10 +51,10 @@ function createHandleStreamCommand({ eventPublisher, getClientByPhone, registerC
         return true;
       }
 
-      if (error && error.code === '23505') {
+      if (error instanceof DuplicateClientError) {
         await publishEvent(envelope, 'RegisterClientFailed', {
           reason: 'duplicate',
-          message: 'Client already registered for this phone',
+          message: error.message,
         });
         return true;
       }
@@ -61,20 +63,21 @@ function createHandleStreamCommand({ eventPublisher, getClientByPhone, registerC
     }
   }
 
+  const commandDispatcher = {
+    Ping: handlePing,
+    GetClientByPhone: handleGetClientByPhone,
+    RegisterClient: handleRegisterClient,
+  };
+
   return async function handleStreamCommand({ fields }) {
     const envelope = parseStreamEnvelope(fields);
+    const handler = commandDispatcher[envelope.type];
 
-    switch (envelope.type) {
-      case 'Ping':
-        pingCommandSchema.parse(envelope);
-        return handlePing(envelope);
-      case 'GetClientByPhone':
-        return handleGetClientByPhone(envelope);
-      case 'RegisterClient':
-        return handleRegisterClient(envelope);
-      default:
-        throw new Error(`Unknown command type: ${envelope.type}`);
+    if (!handler) {
+      throw new Error(`Unknown command type: ${envelope.type}`);
     }
+
+    return handler(envelope);
   };
 }
 

@@ -1,6 +1,7 @@
-/**
- * Ordering bounded context — domain layer placeholder.
- * Business validators and entities will be added in feature issues.
- */
+const { DuplicateClientError } = require('./client/duplicateClientError');
+const { parseRegisterClientPayload } = require('./client/registerClientSchema');
 
-module.exports = {};
+module.exports = {
+  DuplicateClientError,
+  parseRegisterClientPayload,
+};

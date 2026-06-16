@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const { Pool } = require('pg');
 const { runDockerCompose } = require('./dockerCompose');
+const { runMigrations } = require('../../scripts/migrate');
 
 const SERVICE_ROOT = path.join(__dirname, '..', '..');
 const COMPOSE_FILE = path.join(SERVICE_ROOT, 'docker-compose.test.yml');
@@ -45,6 +46,7 @@ module.exports = async () => {
 
   if (externalDatabaseUrl) {
     await prepareExternalDatabase(externalDatabaseUrl);
+    await runMigrations(externalDatabaseUrl);
     fs.writeFileSync(
       TEST_ENV_FILE,
       JSON.stringify({
@@ -57,6 +59,7 @@ module.exports = async () => {
   }
 
   runDockerCompose(`-f "${COMPOSE_FILE}" up -d --wait`, SERVICE_ROOT);
+  await runMigrations(DOCKER_DATABASE_URL);
 
   fs.writeFileSync(
     TEST_ENV_FILE,
