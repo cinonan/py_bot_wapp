@@ -4,8 +4,16 @@ const { createPublishStreamEvent } = require('./publishStreamEvent');
 const { createHandlePingCommand } = require('./handlePingCommand');
 const { createHandleGetClientByPhoneCommand } = require('./handleGetClientByPhoneCommand');
 const { createHandleRegisterClientCommand } = require('./handleRegisterClientCommand');
+const { createHandleGetProductCatalogCommand } = require('./handleGetProductCatalogCommand');
+const { createHandleGetProductByIdCommand } = require('./handleGetProductByIdCommand');
 
-function createStreamCommandDispatcher({ eventPublisher, getClientByPhone, registerClient }) {
+function createStreamCommandDispatcher({
+  eventPublisher,
+  getClientByPhone,
+  registerClient,
+  getProductCatalog,
+  getProductById,
+}) {
   const publishStreamEvent = createPublishStreamEvent(eventPublisher);
 
   const commandDispatcher = {
@@ -17,6 +25,14 @@ function createStreamCommandDispatcher({ eventPublisher, getClientByPhone, regis
     RegisterClient: createHandleRegisterClientCommand({
       publishStreamEvent,
       registerClient,
+    }),
+    GetProductCatalog: createHandleGetProductCatalogCommand({
+      publishStreamEvent,
+      getProductCatalog,
+    }),
+    GetProductById: createHandleGetProductByIdCommand({
+      publishStreamEvent,
+      getProductById,
     }),
   };
 

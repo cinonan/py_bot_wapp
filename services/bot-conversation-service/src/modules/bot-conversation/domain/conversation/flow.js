@@ -3,8 +3,16 @@ const {
   validateRegistrationName,
   validateRegistrationAddress,
   isMenuAccessAttempt,
+  parseProductSelectionId,
+  isMenuAccessAllowed,
 } = require('./validators');
 const { parseClientFoundPayload } = require('../messaging/clientEventSchemas');
+const { parseCatalogLoadedPayload, parseProductResolvedPayload } = require('../messaging/catalogEventSchemas');
+const {
+  formatCatalogMenu,
+  formatEmptyCatalogMessage,
+  formatCurrency,
+} = require('./catalogFormatting');
 
 const MESSAGES = {
   askName:
@@ -17,6 +25,18 @@ const MESSAGES = {
   registrationComplete: (name) => `Registro completado, ${name}.`,
   invalidAddressChoice:
     'Responde MISMA para usar tu dirección guardada o NUEVA para indicar otra.',
+  addressConfirmed:
+    'Dirección confirmada. Escribe *Ver Menú* para ver los productos disponibles.',
+  catalogPending:
+    'Estamos cargando el menú. Intenta de nuevo en un momento o escribe *Ver Menú*.',
+  catalogLoadFailed:
+    'No pudimos cargar el menú en este momento. Intenta de nuevo escribiendo *Ver Menú*.',
+  invalidProductId:
+    'ID de producto inválido. Responde solo con el número del producto del menú.',
+  productNotFound:
+    'No encontré ese producto. Por favor elige un ID válido del menú.',
+  productLookupFailed:
+    'No pudimos verificar el producto. Intenta de nuevo en un momento.',
 };
 
 function mapClientLookupResponse(response) {
@@ -126,24 +146,189 @@ function mapRegistrationSuccess(client) {
 
 function handleConfirmingAddressTurn(session, text) {
   if (isMenuAccessAttempt(text)) {
-    return {
-      replies: [MESSAGES.menuBlocked],
-      session,
-    };
+    if (!isMenuAccessAllowed(session)) {
+      return {
+        replies: [MESSAGES.menuBlocked],
+        session,
+      };
+    }
+
+    return buildMenuAccessTransition(session);
   }
 
   const answer = String(text ?? '').trim().toLowerCase();
   if (answer === 'misma' || answer === 'nueva') {
     return {
-      replies: [
-        'Dirección registrada. El menú estará disponible en el siguiente paso del flujo.',
-      ],
-      session,
+      replies: [MESSAGES.addressConfirmed],
+      session: {
+        ...session,
+        metadata: {
+          ...session.metadata,
+          addressConfirmed: true,
+          deliveryAddressChoice: answer,
+        },
+      },
     };
   }
 
   return {
     replies: [MESSAGES.invalidAddressChoice],
+    session,
+  };
+}
+
+function buildMenuAccessTransition(session) {
+  const cachedCatalog = session.metadata?.catalogCache;
+  if (Array.isArray(cachedCatalog)) {
+    return mapCatalogLoadedToTransition(session, cachedCatalog);
+  }
+
+  return {
+    replies: [],
+    session: {
+      ...session,
+      state: CONVERSATION_STATE.AWAITING_CATALOG,
+      metadata: {
+        ...session.metadata,
+      },
+    },
+    shouldLoadCatalog: true,
+  };
+}
+
+function mapCatalogResponse(session, response) {
+  if (response.timedOut) {
+    return {
+      replies: [response.waitingMessage],
+      session: {
+        ...session,
+        state: CONVERSATION_STATE.AWAITING_CATALOG,
+        metadata: session.metadata,
+      },
+    };
+  }
+
+  if (response.type === 'CatalogLoadFailed') {
+    return {
+      replies: [MESSAGES.catalogLoadFailed],
+      session: {
+        ...session,
+        state: CONVERSATION_STATE.AWAITING_CATALOG,
+        metadata: session.metadata,
+      },
+    };
+  }
+
+  if (response.type === 'CatalogLoaded') {
+    const { products } = parseCatalogLoadedPayload(response.payload);
+    return mapCatalogLoadedToTransition(session, products);
+  }
+
+  return {
+    replies: [MESSAGES.catalogLoadFailed],
+    session: {
+      ...session,
+      state: CONVERSATION_STATE.AWAITING_CATALOG,
+      metadata: session.metadata,
+    },
+  };
+}
+
+function mapCatalogLoadedToTransition(session, products) {
+  if (!Array.isArray(products) || products.length === 0) {
+    return {
+      replies: [formatEmptyCatalogMessage()],
+      session: {
+        ...session,
+        state: CONVERSATION_STATE.SELECTING_PRODUCT,
+        metadata: {
+          ...session.metadata,
+          catalogCache: [],
+        },
+      },
+    };
+  }
+
+  return {
+    replies: [formatCatalogMenu(products)],
+    session: {
+      ...session,
+      state: CONVERSATION_STATE.SELECTING_PRODUCT,
+      metadata: {
+        ...session.metadata,
+        catalogCache: products,
+      },
+    },
+  };
+}
+
+function handleAwaitingCatalogTurn(session, text) {
+  if (isMenuAccessAttempt(text)) {
+    return buildMenuAccessTransition(session);
+  }
+
+  return {
+    replies: [MESSAGES.catalogPending],
+    session,
+    shouldLoadCatalog: true,
+  };
+}
+
+function handleSelectingProductTurn(session, text) {
+  if (isMenuAccessAttempt(text)) {
+    return buildMenuAccessTransition(session);
+  }
+
+  const productId = parseProductSelectionId(text);
+  if (!productId) {
+    return {
+      replies: [MESSAGES.invalidProductId],
+      session,
+      shouldLookupProduct: false,
+    };
+  }
+
+  return {
+    replies: [],
+    session,
+    shouldLookupProduct: true,
+    productId,
+  };
+}
+
+function mapProductLookupResponse(session, response, productId) {
+  if (response.timedOut) {
+    return {
+      replies: [response.waitingMessage],
+      session,
+    };
+  }
+
+  if (response.type === 'ProductNotFound') {
+    return {
+      replies: [MESSAGES.productNotFound],
+      session,
+    };
+  }
+
+  if (response.type === 'ProductResolved') {
+    const { product } = parseProductResolvedPayload(response.payload);
+    return {
+      replies: [
+        `Producto seleccionado: *${product.nombre}* (${formatCurrency(product.precio)}).`,
+      ],
+      session: {
+        ...session,
+        metadata: {
+          ...session.metadata,
+          selectedProduct: product,
+        },
+      },
+    };
+  }
+
+  return {
+    replies: [MESSAGES.productLookupFailed],
     session,
   };
 }
@@ -155,4 +340,10 @@ module.exports = {
   handleRegistrationAddressValidation,
   mapRegistrationSuccess,
   handleConfirmingAddressTurn,
+  buildMenuAccessTransition,
+  mapCatalogResponse,
+  mapCatalogLoadedToTransition,
+  handleAwaitingCatalogTurn,
+  handleSelectingProductTurn,
+  mapProductLookupResponse,
 };

@@ -24,6 +24,14 @@ const registerClientCommandSchema = streamEnvelopeSchema.extend({
   type: z.literal('RegisterClient'),
 });
 
+const getProductCatalogCommandSchema = streamEnvelopeSchema.extend({
+  type: z.literal('GetProductCatalog'),
+});
+
+const getProductByIdCommandSchema = streamEnvelopeSchema.extend({
+  type: z.literal('GetProductById'),
+});
+
 const pongEventSchema = streamEnvelopeSchema.extend({
   type: z.literal('Pong'),
 });
@@ -42,6 +50,18 @@ const clientRegisteredEventSchema = streamEnvelopeSchema.extend({
 
 const registerClientFailedEventSchema = streamEnvelopeSchema.extend({
   type: z.literal('RegisterClientFailed'),
+});
+
+const catalogLoadedEventSchema = streamEnvelopeSchema.extend({
+  type: z.literal('CatalogLoaded'),
+});
+
+const productResolvedEventSchema = streamEnvelopeSchema.extend({
+  type: z.literal('ProductResolved'),
+});
+
+const productNotFoundEventSchema = streamEnvelopeSchema.extend({
+  type: z.literal('ProductNotFound'),
 });
 
 const catalogLoadFailedEventSchema = streamEnvelopeSchema.extend({
@@ -79,11 +99,16 @@ module.exports = {
   pingCommandSchema,
   getClientByPhoneCommandSchema,
   registerClientCommandSchema,
+  getProductCatalogCommandSchema,
+  getProductByIdCommandSchema,
   pongEventSchema,
   clientFoundEventSchema,
   clientNotFoundEventSchema,
   clientRegisteredEventSchema,
   registerClientFailedEventSchema,
+  catalogLoadedEventSchema,
+  productResolvedEventSchema,
+  productNotFoundEventSchema,
   catalogLoadFailedEventSchema,
   orderPlaceFailedEventSchema,
   orderDispatchFailedEventSchema,

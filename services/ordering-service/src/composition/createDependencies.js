@@ -1,10 +1,13 @@
 const { createPool } = require('../modules/ordering/infrastructure/postgres/pool');
 const { createClientRepository } = require('../modules/ordering/infrastructure/postgres/clientRepository');
+const { createProductRepository } = require('../modules/ordering/infrastructure/postgres/productRepository');
 const { createRedisClient } = require('../modules/ordering/infrastructure/redis/client');
 const { createStreamPublisher } = require('../modules/ordering/infrastructure/redis/streamPublisher');
 const { createDlqPublisher } = require('../modules/ordering/infrastructure/redis/dlqPublisher');
 const { createGetClientByPhone } = require('../modules/ordering/application/getClientByPhone');
 const { createRegisterClient } = require('../modules/ordering/application/registerClient');
+const { createGetProductCatalog } = require('../modules/ordering/application/getProductCatalog');
+const { createGetProductById } = require('../modules/ordering/application/getProductById');
 const { createStreamCommandDispatcher } = require('../modules/ordering/application/streamCommandDispatcher');
 const { createOrderingStreamConsumer } = require('../modules/ordering/infrastructure/redis/orderingStreamConsumer');
 const { createJwtVerifier } = require('../modules/ordering/infrastructure/http/jwtVerifier');
@@ -17,15 +20,20 @@ function createDependencies(config = {}) {
 
   const pool = createPool(databaseUrl);
   const clientRepository = createClientRepository(pool);
+  const productRepository = createProductRepository(pool);
   const redis = createRedisClient(redisUrl);
   const eventPublisher = createStreamPublisher({ redis });
   const { publishToDlq } = createDlqPublisher({ redis });
   const getClientByPhone = createGetClientByPhone({ clientRepository });
   const registerClient = createRegisterClient({ clientRepository });
+  const getProductCatalog = createGetProductCatalog({ productRepository });
+  const getProductById = createGetProductById({ productRepository });
   const dispatchStreamCommand = createStreamCommandDispatcher({
     eventPublisher,
     getClientByPhone,
     registerClient,
+    getProductCatalog,
+    getProductById,
   });
   const streamConsumer = createOrderingStreamConsumer({
     redis,

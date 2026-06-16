@@ -1,3 +1,5 @@
+const { CONVERSATION_STATE } = require('./states');
+
 function normalizeText(text) {
   return String(text ?? '').trim();
 }
@@ -49,9 +51,44 @@ function isMenuAccessAttempt(text) {
   return /^(ver\s+)?men[uú]$/i.test(normalizeText(text));
 }
 
+function parseProductSelectionId(text) {
+  const value = normalizeText(text);
+  if (!/^\d+$/.test(value)) {
+    return null;
+  }
+
+  const productId = Number(value);
+  if (!Number.isInteger(productId) || productId <= 0) {
+    return null;
+  }
+
+  return productId;
+}
+
+function isMenuAccessAllowed(session) {
+  if (!session) {
+    return false;
+  }
+
+  if (
+    session.state === CONVERSATION_STATE.AWAITING_REGISTRATION_NAME
+    || session.state === CONVERSATION_STATE.AWAITING_REGISTRATION_ADDRESS
+  ) {
+    return false;
+  }
+
+  if (session.state === CONVERSATION_STATE.CONFIRMING_ADDRESS) {
+    return Boolean(session.metadata?.addressConfirmed);
+  }
+
+  return true;
+}
+
 module.exports = {
   normalizeText,
   validateRegistrationName,
   validateRegistrationAddress,
   isMenuAccessAttempt,
+  parseProductSelectionId,
+  isMenuAccessAllowed,
 };

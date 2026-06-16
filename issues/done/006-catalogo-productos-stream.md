@@ -12,14 +12,14 @@ Requiere webhook seguro (005) y cliente identificado (004).
 
 ## Acceptance criteria
 
-- [ ] `GetProductCatalog` publica `CatalogLoaded` con productos activos desde seed/PostgreSQL.
-- [ ] Bot entra en `AWAITING_CATALOG`, espera evento correlacionado y muestra menú numerado con precios.
-- [ ] Catálogo cacheado en sesión; «Ver Menú» reutiliza caché sin nuevo `GetProductCatalog` mientras TTL de sesión/caché vigente.
-- [ ] Catálogo vacío produce mensaje informativo al usuario (no menú roto).
-- [ ] `GetProductById` rechaza productos inactivos con `ProductNotFound`.
-- [ ] Selección de ID inválido muestra mensaje claro sin reiniciar flujo ni carrito.
-- [ ] Bot no envía precios en comandos de escritura; solo muestra precios recibidos en eventos.
-- [ ] Pruebas de integración: seed → `CatalogLoaded` → menú renderizable.
+- [x] `GetProductCatalog` publica `CatalogLoaded` con productos activos desde seed/PostgreSQL.
+- [x] Bot entra en `AWAITING_CATALOG`, espera evento correlacionado y muestra menú numerado con precios.
+- [x] Catálogo cacheado en sesión; «Ver Menú» reutiliza caché sin nuevo `GetProductCatalog` mientras TTL de sesión/caché vigente.
+- [x] Catálogo vacío produce mensaje informativo al usuario (no menú roto).
+- [x] `GetProductById` rechaza productos inactivos con `ProductNotFound`.
+- [x] Selección de ID inválido muestra mensaje claro sin reiniciar flujo ni carrito.
+- [x] Bot no envía precios en comandos de escritura; solo muestra precios recibidos en eventos.
+- [x] Pruebas de integración: seed → `CatalogLoaded` → menú renderizable.
 
 ## Blocked by
 

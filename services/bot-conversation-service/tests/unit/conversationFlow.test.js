@@ -5,6 +5,10 @@ const {
   handleRegistrationAddressValidation,
   mapRegistrationSuccess,
   handleConfirmingAddressTurn,
+  mapCatalogLoadedToTransition,
+  buildMenuAccessTransition,
+  handleSelectingProductTurn,
+  mapProductLookupResponse,
 } = require('../../src/modules/bot-conversation/domain/conversation/flow');
 
 describe('conversation state transitions', () => {
@@ -104,5 +108,80 @@ describe('conversation state transitions', () => {
 
     expect(transition.session.state).toBe(CONVERSATION_STATE.CONFIRMING_ADDRESS);
     expect(transition.replies[0]).toContain('MISMA');
+  });
+
+  test('marks address confirmed after MISMA/NUEVA', () => {
+    const session = {
+      state: CONVERSATION_STATE.CONFIRMING_ADDRESS,
+      metadata: { name: 'Ana', savedAddress: 'Calle 1' },
+    };
+
+    const transition = handleConfirmingAddressTurn(session, 'MISMA');
+
+    expect(transition.session.metadata.addressConfirmed).toBe(true);
+    expect(transition.replies[0]).toContain('Ver Menú');
+  });
+
+  test('requests catalog load when menu is accessed without cache', () => {
+    const session = {
+      state: CONVERSATION_STATE.CONFIRMING_ADDRESS,
+      metadata: { name: 'Ana', addressConfirmed: true },
+    };
+
+    const transition = buildMenuAccessTransition(session);
+
+    expect(transition.shouldLoadCatalog).toBe(true);
+    expect(transition.session.state).toBe(CONVERSATION_STATE.AWAITING_CATALOG);
+  });
+
+  test('reuses cached catalog without requesting load', () => {
+    const products = [{ id: 1, nombre: 'Arroz con pollo', precio: '18.50' }];
+    const session = {
+      state: CONVERSATION_STATE.SELECTING_PRODUCT,
+      metadata: { catalogCache: products },
+    };
+
+    const transition = buildMenuAccessTransition(session);
+
+    expect(transition.shouldLoadCatalog).toBeUndefined();
+    expect(transition.session.state).toBe(CONVERSATION_STATE.SELECTING_PRODUCT);
+    expect(transition.replies[0]).toContain('Arroz con pollo');
+  });
+
+  test('renders empty catalog message when no active products', () => {
+    const transition = mapCatalogLoadedToTransition(
+      { state: CONVERSATION_STATE.AWAITING_CATALOG, metadata: {} },
+      [],
+    );
+
+    expect(transition.replies[0]).toContain('no hay productos');
+    expect(transition.session.metadata.catalogCache).toEqual([]);
+  });
+
+  test('parses product selection and rejects invalid ids locally', () => {
+    const session = {
+      state: CONVERSATION_STATE.SELECTING_PRODUCT,
+      metadata: { catalogCache: [{ id: 1, nombre: 'Arroz', precio: '10.00' }] },
+    };
+
+    const invalid = handleSelectingProductTurn(session, 'abc');
+    expect(invalid.shouldLookupProduct).toBe(false);
+    expect(invalid.replies[0]).toContain('inválido');
+
+    const valid = handleSelectingProductTurn(session, '1');
+    expect(valid.shouldLookupProduct).toBe(true);
+    expect(valid.productId).toBe(1);
+  });
+
+  test('maps ProductNotFound without resetting session state', () => {
+    const session = {
+      state: CONVERSATION_STATE.SELECTING_PRODUCT,
+      metadata: { catalogCache: [{ id: 1, nombre: 'Arroz', precio: '10.00' }] },
+    };
+
+    const transition = mapProductLookupResponse(session, { type: 'ProductNotFound' }, 99);
+
+    expect(transition.session.state).toBe(CONVERSATION_STATE.SELECTING_PRODUCT);
+    expect(transition.replies[0]).toContain('No encontré');
   });
 });

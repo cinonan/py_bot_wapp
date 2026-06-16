@@ -37,6 +37,8 @@ Todo mensaje en ambos streams incluye:
 | `Ping` | `{}` | `Pong` |
 | `GetClientByPhone` | `{}` | `ClientFound` / `ClientNotFound` |
 | `RegisterClient` | `{ nombre, direccion_principal }` | `ClientRegistered` / `RegisterClientFailed` |
+| `GetProductCatalog` | `{}` | `CatalogLoaded` / `CatalogLoadFailed` |
+| `GetProductById` | `{ productId }` | `ProductResolved` / `ProductNotFound` |
 
 Comandos de negocio (`RegisterClient`, `GetProductCatalog`, etc.) se documentan en el PRD y se implementan en issues de features.
 
@@ -49,6 +51,9 @@ Comandos de negocio (`RegisterClient`, `GetProductCatalog`, etc.) se documentan 
 | `ClientNotFound` | `{}` | Sin cliente registrado para el teléfono |
 | `ClientRegistered` | `{ client }` | Cliente creado exitosamente |
 | `RegisterClientFailed` | `{ reason, issues? \| message? }` | Validación o duplicado al registrar |
+| `CatalogLoaded` | `{ products: [{ id, nombre, precio }] }` | Catálogo activo disponible |
+| `ProductResolved` | `{ product: { id, nombre, precio } }` | Producto activo encontrado |
+| `ProductNotFound` | `{}` | Producto inexistente o inactivo |
 | `CatalogLoadFailed` | `{ reason, issues? \| message? }` | Error al obtener catálogo |
 | `OrderPlaceFailed` | `{ reason, issues? \| message? }` | Error al colocar pedido |
 | `OrderDispatchFailed` | `{ reason, issues? \| message? }` | Error al despachar pedido administrativo |

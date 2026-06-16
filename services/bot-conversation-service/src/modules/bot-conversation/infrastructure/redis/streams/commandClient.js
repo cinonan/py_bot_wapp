@@ -8,6 +8,8 @@ const { ReplyTimeoutError } = require('./replyRegistry');
  * @property {(params: { wamid: string, phone: string }) => Promise<object>} sendPing
  * @property {(params: { wamid: string, phone: string }) => Promise<object>} getClientByPhone
  * @property {(params: { wamid: string, phone: string, payload: object }) => Promise<object>} registerClient
+ * @property {(params: { wamid: string, phone: string }) => Promise<object>} getProductCatalog
+ * @property {(params: { wamid: string, phone: string, productId: number }) => Promise<object>} getProductById
  */
 
 /**
@@ -76,6 +78,28 @@ function createStreamCommandClient({ redis, replyRegistry, replyTimeoutMs }) {
         type: 'RegisterClient',
         metadata: { wamid, correlationId, phone, timestamp },
         payload,
+      });
+    },
+
+    async getProductCatalog({ wamid, phone }) {
+      const correlationId = randomUUID();
+      const timestamp = new Date().toISOString();
+
+      return this.sendCommand({
+        type: 'GetProductCatalog',
+        metadata: { wamid, correlationId, phone, timestamp },
+        payload: {},
+      });
+    },
+
+    async getProductById({ wamid, phone, productId }) {
+      const correlationId = randomUUID();
+      const timestamp = new Date().toISOString();
+
+      return this.sendCommand({
+        type: 'GetProductById',
+        metadata: { wamid, correlationId, phone, timestamp },
+        payload: { productId },
       });
     },
   };
