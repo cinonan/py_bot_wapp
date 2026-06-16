@@ -49,6 +49,19 @@ Comandos de negocio (`RegisterClient`, `GetProductCatalog`, etc.) se documentan 
 | `ClientNotFound` | `{}` | Sin cliente registrado para el teléfono |
 | `ClientRegistered` | `{ client }` | Cliente creado exitosamente |
 | `RegisterClientFailed` | `{ reason, issues? \| message? }` | Validación o duplicado al registrar |
+| `CatalogLoadFailed` | `{ reason, issues? \| message? }` | Error al obtener catálogo |
+| `OrderPlaceFailed` | `{ reason, issues? \| message? }` | Error al colocar pedido |
+| `OrderDispatchFailed` | `{ reason, issues? \| message? }` | Error al despachar pedido administrativo |
+
+## Política de errores (consumidor Ordering)
+
+| Clasificación | Comportamiento |
+|---------------|----------------|
+| Transitorio | Sin `XACK`; mensaje permanece en PEL |
+| Permanente — validación | `XACK` + evento `*Failed` correlacionado |
+| Agotamiento | Tras `STREAM_MAX_RETRIES` (default 5) → `XACK` + copia a `ordering:dlq` |
+
+La DLQ es append-only y no bloquea el consumer group principal.
 
 ## Request-reply
 
@@ -60,5 +73,4 @@ Comandos de negocio (`RegisterClient`, `GetProductCatalog`, etc.) se documentan 
 ## Acknowledgment
 
 - `XACK` solo tras procesamiento exitoso.
-- Errores transitorios: sin `XACK` (mensaje permanece en PEL).
-- Errores permanentes de validación: `XACK` + evento `*Failed` (issues posteriores).
+- Detalle de clasificación transitorio / permanente / DLQ: sección **Política de errores** arriba.

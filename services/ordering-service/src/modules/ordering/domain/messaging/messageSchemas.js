@@ -44,6 +44,18 @@ const registerClientFailedEventSchema = streamEnvelopeSchema.extend({
   type: z.literal('RegisterClientFailed'),
 });
 
+const catalogLoadFailedEventSchema = streamEnvelopeSchema.extend({
+  type: z.literal('CatalogLoadFailed'),
+});
+
+const orderPlaceFailedEventSchema = streamEnvelopeSchema.extend({
+  type: z.literal('OrderPlaceFailed'),
+});
+
+const orderDispatchFailedEventSchema = streamEnvelopeSchema.extend({
+  type: z.literal('OrderDispatchFailed'),
+});
+
 function parseStreamFields(fields) {
   const record = {};
 
@@ -72,6 +84,9 @@ module.exports = {
   clientNotFoundEventSchema,
   clientRegisteredEventSchema,
   registerClientFailedEventSchema,
+  catalogLoadFailedEventSchema,
+  orderPlaceFailedEventSchema,
+  orderDispatchFailedEventSchema,
   parseStreamFields,
   parseStreamEnvelope,
 };

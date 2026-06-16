@@ -1,4 +1,5 @@
 const { parseStreamEnvelope } = require('../domain/messaging/messageSchemas');
+const { UnknownCommandError } = require('../domain/messaging/streamErrorClassification');
 const { createPublishStreamEvent } = require('./publishStreamEvent');
 const { createHandlePingCommand } = require('./handlePingCommand');
 const { createHandleGetClientByPhoneCommand } = require('./handleGetClientByPhoneCommand');
@@ -24,7 +25,7 @@ function createStreamCommandDispatcher({ eventPublisher, getClientByPhone, regis
     const handler = commandDispatcher[envelope.type];
 
     if (!handler) {
-      throw new Error(`Unknown command type: ${envelope.type}`);
+      throw new UnknownCommandError(envelope.type);
     }
 
     return handler(envelope);

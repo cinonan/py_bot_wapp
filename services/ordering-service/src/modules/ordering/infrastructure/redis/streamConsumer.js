@@ -6,6 +6,16 @@ const {
 const BLOCK_MS = 2000;
 const READ_COUNT = 10;
 
+async function getDeliveryCount(redis, stream, group, messageId) {
+  const pending = await redis.xPendingRange(stream, group, messageId, messageId, 1);
+
+  if (pending.length === 0) {
+    return 1;
+  }
+
+  return pending[0].deliveriesCounter;
+}
+
 async function ensureConsumerGroup(redis, stream, group) {
   try {
     await redis.xGroupCreate(stream, group, '0', { MKSTREAM: true });
@@ -26,9 +36,10 @@ function createStreamConsumer({ redis, handler, consumerName = 'ordering-1' }) {
     inFlight.add(messageId);
 
     try {
-      const shouldAck = await handler({ messageId, fields });
+      const deliveryCount = await getDeliveryCount(redis, stream, group, messageId);
+      const result = await handler({ messageId, fields, deliveryCount });
 
-      if (shouldAck) {
+      if (result?.ack) {
         await redis.xAck(stream, group, messageId);
       }
     } finally {
@@ -47,7 +58,10 @@ function createStreamConsumer({ redis, handler, consumerName = 'ordering-1' }) {
       const batches = await redis.xReadGroup(
         CONSUMER_GROUP_ORDERING,
         consumerName,
-        [{ key: STREAM_BOT_EVENTS, id: '>' }],
+        [
+          { key: STREAM_BOT_EVENTS, id: '0' },
+          { key: STREAM_BOT_EVENTS, id: '>' },
+        ],
         { COUNT: READ_COUNT, BLOCK: BLOCK_MS },
       );
 
@@ -107,4 +121,4 @@ function createStreamConsumer({ redis, handler, consumerName = 'ordering-1' }) {
   };
 }
 
-module.exports = { createStreamConsumer, ensureConsumerGroup };
+module.exports = { createStreamConsumer, ensureConsumerGroup, getDeliveryCount };

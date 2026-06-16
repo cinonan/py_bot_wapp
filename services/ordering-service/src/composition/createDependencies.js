@@ -2,6 +2,7 @@ const { createPool } = require('../modules/ordering/infrastructure/postgres/pool
 const { createClientRepository } = require('../modules/ordering/infrastructure/postgres/clientRepository');
 const { createRedisClient } = require('../modules/ordering/infrastructure/redis/client');
 const { createStreamPublisher } = require('../modules/ordering/infrastructure/redis/streamPublisher');
+const { createDlqPublisher } = require('../modules/ordering/infrastructure/redis/dlqPublisher');
 const { createGetClientByPhone } = require('../modules/ordering/application/getClientByPhone');
 const { createRegisterClient } = require('../modules/ordering/application/registerClient');
 const { createStreamCommandDispatcher } = require('../modules/ordering/application/streamCommandDispatcher');
@@ -15,6 +16,7 @@ function createDependencies(config = {}) {
   const clientRepository = createClientRepository(pool);
   const redis = createRedisClient(redisUrl);
   const eventPublisher = createStreamPublisher({ redis });
+  const { publishToDlq } = createDlqPublisher({ redis });
   const getClientByPhone = createGetClientByPhone({ clientRepository });
   const registerClient = createRegisterClient({ clientRepository });
   const dispatchStreamCommand = createStreamCommandDispatcher({
@@ -25,6 +27,8 @@ function createDependencies(config = {}) {
   const streamConsumer = createOrderingStreamConsumer({
     redis,
     dispatchStreamCommand,
+    eventPublisher,
+    publishToDlq,
   });
 
   const appDeps = {
@@ -38,6 +42,7 @@ function createDependencies(config = {}) {
       ...appDeps,
       eventPublisher,
       dispatchStreamCommand,
+      publishToDlq,
     };
   }
 
