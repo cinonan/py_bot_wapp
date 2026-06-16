@@ -1,3 +1,11 @@
+/**
+ * @typedef {object} MessageSenderPort
+ * @property {(phone: string, text: string) => Promise<void>} sendTextMessage
+ */
+
+/**
+ * @returns {MessageSenderPort & { sent: Array<{ phone: string, text: string }> }}
+ */
 function createCollectingMessageSender() {
   const sent = [];
 
@@ -9,6 +17,9 @@ function createCollectingMessageSender() {
   };
 }
 
+/**
+ * @returns {MessageSenderPort}
+ */
 function createLoggingMessageSender() {
   return {
     async sendTextMessage(phone, text) {

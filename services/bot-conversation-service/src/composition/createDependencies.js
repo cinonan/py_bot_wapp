@@ -16,6 +16,9 @@ const { createWebhookHandler } = require('../modules/bot-conversation/applicatio
 const {
   createLoggingMessageSender,
 } = require('../modules/bot-conversation/infrastructure/messaging/messageSender');
+const {
+  parseIncomingTextMessage,
+} = require('../modules/bot-conversation/infrastructure/meta/incomingMessageParser');
 
 function createDependencies(config = {}) {
   const redisUrl = config.redisUrl || process.env.REDIS_URL;
@@ -45,6 +48,7 @@ function createDependencies(config = {}) {
   const webhookHandler = createWebhookHandler({
     handleConversationMessage,
     messageSender,
+    parseIncomingTextMessage,
     awaitProcessing: awaitWebhookProcessing,
   });
 

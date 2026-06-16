@@ -1,5 +1,13 @@
 const { parseRegisterClientPayload } = require('../domain/client/registerClientSchema');
 
+/**
+ * @typedef {object} ClientRepositoryPort
+ * @property {(data: { telefono: string, nombre: string, direccion_principal: string }) => Promise<object>} create
+ */
+
+/**
+ * @param {{ clientRepository: ClientRepositoryPort }} deps
+ */
 function createRegisterClient({ clientRepository }) {
   return async function registerClient({ phone, payloadJson }) {
     const payload = parseRegisterClientPayload(payloadJson);

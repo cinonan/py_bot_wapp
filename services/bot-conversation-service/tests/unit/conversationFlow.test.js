@@ -20,6 +20,8 @@ describe('conversation state transitions', () => {
       type: 'ClientFound',
       payload: JSON.stringify({
         client: {
+          id: 1,
+          telefono: '51999001001',
           nombre: 'Ana Ruiz',
           direccion_principal: 'Calle 10',
         },

@@ -1,6 +1,23 @@
 const SESSION_TTL_SECONDS = 60 * 60;
 const SESSION_KEY_PREFIX = 'bot:session';
 
+/**
+ * @typedef {object} ConversationSession
+ * @property {string} state
+ * @property {object} metadata
+ */
+
+/**
+ * @typedef {object} SessionStorePort
+ * @property {(phone: string) => Promise<ConversationSession|null>} get
+ * @property {(phone: string, session: ConversationSession) => Promise<ConversationSession>} set
+ * @property {(phone: string) => Promise<void>} clear
+ */
+
+/**
+ * @param {{ redis: import('redis').RedisClientType, ttlSeconds?: number }} deps
+ * @returns {SessionStorePort}
+ */
 function createSessionStore({ redis, ttlSeconds = SESSION_TTL_SECONDS }) {
   function sessionKey(phone) {
     return `${SESSION_KEY_PREFIX}:${phone}`;

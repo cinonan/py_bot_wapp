@@ -39,5 +39,6 @@ Validación con Zod en dominio de Ordering; validadores conversacionales en domi
 - User story 78
 - User story 87
 
-## Alcance reproceso: 
-solo refactor incremental
+## Alcance reproceso
+
+Refactor incremental alineado a SAD § 3.1: router conversacional por estado, parser Meta inyectado en composition root, esquemas Zod de eventos cliente en ambos servicios, JSDoc de puertos.

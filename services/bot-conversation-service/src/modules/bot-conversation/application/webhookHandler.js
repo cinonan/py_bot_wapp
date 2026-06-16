@@ -1,6 +1,26 @@
-const { parseIncomingTextMessage } = require('../infrastructure/meta/incomingMessageParser');
+/**
+ * @typedef {object} IncomingTextMessage
+ * @property {string} phone
+ * @property {string} text
+ * @property {string} wamid
+ */
 
-function createWebhookHandler({ handleConversationMessage, messageSender, awaitProcessing = false }) {
+/**
+ * @typedef {object} IncomingMessageParserPort
+ * @property {(body: object) => IncomingTextMessage|null} parseIncomingTextMessage
+ */
+
+/**
+ * @typedef {object} MessageSenderPort
+ * @property {(phone: string, text: string) => Promise<void>} sendTextMessage
+ */
+
+function createWebhookHandler({
+  handleConversationMessage,
+  messageSender,
+  parseIncomingTextMessage,
+  awaitProcessing = false,
+}) {
   async function processIncoming(incoming) {
     const result = await handleConversationMessage(incoming);
 

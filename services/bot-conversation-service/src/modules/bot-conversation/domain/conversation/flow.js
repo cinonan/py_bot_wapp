@@ -4,6 +4,7 @@ const {
   validateRegistrationAddress,
   isMenuAccessAttempt,
 } = require('./validators');
+const { parseClientFoundPayload } = require('../messaging/clientEventSchemas');
 
 const MESSAGES = {
   askName:
@@ -30,8 +31,7 @@ function mapClientLookupResponse(response) {
   }
 
   if (response.type === 'ClientFound') {
-    const payload = JSON.parse(response.payload || '{}');
-    const client = payload.client;
+    const { client } = parseClientFoundPayload(response.payload);
 
     return {
       replies: [MESSAGES.confirmAddressPrompt(client.nombre)],
