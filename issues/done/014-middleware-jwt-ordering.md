@@ -10,12 +10,12 @@ Código listo para enchufar cuando exista panel web u otro cliente HTTP; incluye
 
 ## Acceptance criteria
 
-- [ ] Middleware JWT implementado y registrable en composition root del Ordering-Service.
-- [ ] Verificación RS256 con clave pública desde `process.env.*` (sin secretos en código).
-- [ ] Ningún endpoint HTTP de negocio expuesto públicamente en esta fase (solo streams + health).
-- [ ] Middleware exportado/documentado para uso futuro en rutas protegidas.
-- [ ] Prueba unitaria: token firmado válido pasa; token inválido o expirado rechazado.
-- [ ] Sin endpoints que requieran JWT en producción hasta fase posterior (Out of Scope del PRD).
+- [x] Middleware JWT implementado y registrable en composition root del Ordering-Service.
+- [x] Verificación RS256 con clave pública desde `process.env.*` (sin secretos en código).
+- [x] Ningún endpoint HTTP de negocio expuesto públicamente en esta fase (solo streams + health).
+- [x] Middleware exportado/documentado para uso futuro en rutas protegidas.
+- [x] Prueba unitaria: token firmado válido pasa; token inválido o expirado rechazado.
+- [x] Sin endpoints que requieran JWT en producción hasta fase posterior (Out of Scope del PRD).
 
 ## Blocked by
 
