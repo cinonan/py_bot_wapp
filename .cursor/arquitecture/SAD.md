@@ -49,6 +49,48 @@ src/modules/ordering/application/: Casos de uso (PlaceOrder, AddToCart), interfa
 
 src/modules/ordering/infrastructure/: Adaptadores concretos. Repositorios pg para PostgreSQL (transacción createWithDetails), clientes HTTP para endpoints, drivers de conexión a bases de datos y manejadores de eventos distribuidos(Código tecnológico que escucha Redis y atrapa el evento).
 
+### 3.1 Convenciones de implementación (Clean Architecture pragmática)
+
+Stack: **JavaScript** (sin TypeScript), **Jest**, composition root manual en `composition/createDependencies.js` (sin framework de inyección de dependencias).
+
+**Puertos y adaptadores en este proyecto**
+
+- Los puertos del PRD (`OrderRepositoryPort`, `CartStorePort`, etc.) son **contratos conceptuales**; en código se implementan como **objetos inyectados** (`{ clientRepository, eventPublisher }`) creados por factories en `infrastructure/`.
+- No se exigen archivos `*Port.js` ni interfaces TypeScript; documentar el shape del puerto con **JSDoc `@typedef`** en el factory cuando el contrato no sea obvio.
+- El cableado de dependencias ocurre **solo** en `composition/createDependencies.js`.
+
+**Reglas de capas**
+
+| Capa | Contenido | Prohibido |
+|------|-----------|-----------|
+| `domain/` | Lógica pura, Zod, transiciones de estado, reglas de negocio | Importar `express`, `pg`, `redis`, `axios` o código de `infrastructure/` / `application/` |
+| `application/` | Casos de uso; reciben puertos por parámetro en `createX({ portA })` | Crear clientes de BD/Redis; comparar códigos de error de PostgreSQL (`23505`, etc.) |
+| `infrastructure/` | Repositorios, adaptadores Redis/streams, HTTP Meta, validación HMAC webhook | Reglas de negocio o transiciones conversacionales |
+| `composition/` | Ensamblado manual; exportar solo lo que `app.js` necesita (consumers, webhook, shutdown) | Exportar repos/use cases sueltos salvo para tests |
+
+**Ordering-Service — consumo de streams**
+
+- Cada comando nuevo = handler dedicado en `application/` registrado en un **dispatcher** (`type → handler`). Evitar crecer indefinidamente un único `switch` central.
+- Publicar eventos de dominio vía puerto `eventPublisher`, no acceder a Redis directamente desde casos de uso.
+- Errores de persistencia: los repositorios traducen errores de infraestructura a errores de dominio/aplicación (p. ej. duplicado de cliente); el handler publica el evento `*Failed` correspondiente.
+- Política `XACK`, PEL, DLQ e idempotencia por `wamid`: ver PRD sección **Contratos de mensajería** → **Política de errores en consumidores**.
+
+**Bot-Conversation-Service**
+
+- Transiciones conversacionales puras en `domain/conversation/`; `application/` solo orquesta (sesión, streams, persistir estado).
+- Parsing de payload Meta y validación `X-Hub-Signature-256` en `infrastructure/`, no en lógica de flujo.
+- Respuestas al usuario vía puerto inyectable `messageSender` (adaptador HTTP Meta o stub en tests).
+
+**Contratos de mensajería en código**
+
+- Fuente funcional: `issues/prd.md` → **Contratos de mensajería**.
+- Espejo implementado: `services/ordering-service/src/modules/ordering/domain/messaging/contracts.md`.
+- Al añadir comando o evento: actualizar PRD (si aplica), `contracts.md` y esquemas Zod en **ambos** servicios.
+
+**Deuda técnica incremental**
+
+- Al modificar código de issues anteriores, aplicar estas reglas en el archivo tocado sin reescribir el servicio completo ni abrir issues solo por refactor.
+
 4. Vista de Procesos (Comunicación Asíncrona y Redis Streams)
 La comunicación inter-servicio es completamente asíncrona y desacoplada en tiempo, utilizando Redis Streams como Message Broker de alta velocidad en memoria.
 

@@ -2,9 +2,11 @@
 
 ## Sources of truth
 
-- Functional + data model: `issues/prd.md`
-- Architecture: `.cursor/arquitecture/SAD.md`
-- Current task: the resolved issue file under `issues/`
+Documentación canónica — ver jerarquía completa en `issues/prd.md` → **Jerarquía de especificaciones y herramientas del agente**:
+
+- Current task: `issues/{NNN}-*.md`
+- Functional + data model + testing: `issues/prd.md`
+- Architecture + implementation conventions: `.cursor/arquitecture/SAD.md` (§ 3.1)
 
 ## Feedback loops (before commit)
 

@@ -42,3 +42,6 @@ None - can start immediately
 - User story 77
 - User story 78
 - User story 79
+
+## Alcance reproceso: 
+solo refactor incremental

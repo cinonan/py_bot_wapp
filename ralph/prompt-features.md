@@ -2,54 +2,30 @@
 
 **Use the `/tdd` skill** for all implementation work on this issue.
 
+## Specifications (read, do not duplicate)
+
+Follow the hierarchy in `issues/prd.md` → **Jerarquía de especificaciones y herramientas del agente**.
+
+| Need | Read |
+|------|------|
+| Acceptance criteria | Current issue `issues/{NNN}-*.md` |
+| Functional rules, contracts, testing scope | PRD sections cited by the issue |
+| Layers, ports, streams, composition | `.cursor/arquitecture/SAD.md` § 3.1 |
+| Commands/events in code | `services/ordering-service/.../domain/messaging/contracts.md` |
+| RED-GREEN-REFACTOR, Jest patterns | `/tdd` skill |
+
+Do **not** restate PRD or SAD rules in code comments or new docs. If specs change, update PRD/SAD/contracts — not this file.
+
 ## Before coding
 
-1. Read `/tdd` skill and linked files (`tests.md`, `mocking.md`, `interface-design.md`).
-2. Read PRD **Testing Decisions** and **Contratos de mensajería** for this slice.
-3. List behaviors to test (from acceptance criteria) — confirm with user only if ambiguous.
+1. Current issue + PRD sections for this slice (skip files already in chat context).
+2. SAD § 3.1 if touching layers, streams, or composition.
+3. `/tdd` skill (`SKILL.md`, `tests.md`, `mocking.md`, `interface-design.md`).
+4. List behaviors to test from acceptance criteria — ask user only if ambiguous.
 
-## Stack and architecture
+## Execute
 
-- **JavaScript + Jest** (not TypeScript)
-- **Clean Architecture**: domain pure → application use cases + ports → infrastructure adapters
-- **Mock** at port boundaries in application unit tests; **real** PostgreSQL/Redis in integration tests where PRD requires
-- Bot never sends price/name in write commands; Ordering owns snapshots
-- `PlaceOrder` must include `direccion_entrega`; NUEVA address does not call `UpdateClientAddress`
-
-## TDD loop (vertical slices)
-
-For each acceptance criterion (or small group):
-
-```
-RED   → one test, one behavior, public interface
-GREEN → minimal code to pass
-REFACTOR → extract duplication; run tests after each step
-```
-
-Do **not** write all tests then all code (horizontal slicing).
-
-## Test layers for this project
-
-| Layer | What | How |
-|-------|------|-----|
-| Domain | Validators, state machine, Zod schemas, cart merge, order state rules | Unit, no mocks |
-| Application | Use cases with ports | Unit, mock ports |
-| Infrastructure | Webhook signature, stream adapters, repositories | Integration with Docker PG/Redis when AC requires |
-| Bot flows | Command publish + event consume | Integration streams tests |
-
-## Boundaries — do not mock
-
-- Domain logic
-- Zod validation rules
-- Internal modules you own
-
-## Boundaries — mock or fake
-
-- `OrderRepositoryPort`, `CartStorePort`, `EventPublisherPort`, etc. in application tests
-- Meta Graph API (manual sandbox only per PRD)
-
-## Feedback
-
-Run `npm test` in each touched service before commit.
+- One acceptance criterion (or tight group) per RED → GREEN → REFACTOR cycle (`/tdd`).
+- Run `npm test` in each touched service before commit.
 
 Follow [prompt-base.md](prompt-base.md) for commit and close rules.

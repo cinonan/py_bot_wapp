@@ -404,6 +404,31 @@ Las pruebas verifican **comportamiento observable desde el exterior**: respuesta
 - El documento de **contexto inicial** establece restricciones de PII y credenciales que este PRD respeta.
 - El código monolítico legado **no es referencia funcional ni técnica** para la implementación.
 
+### Jerarquía de especificaciones y herramientas del agente
+
+Orden de consulta al implementar una issue (no duplicar estas reglas en prompts operativos; los prompts **referencian** estos artefactos):
+
+| Prioridad | Artefacto | Alcance |
+|-----------|-----------|---------|
+| 1 | `issues/{NNN}-*.md` | Criterios de aceptación de la tarea actual |
+| 2 | Este PRD | Comportamiento funcional, modelo de datos, contratos de mensajería, **Testing Decisions** |
+| 3 | `.cursor/arquitecture/SAD.md` | Topología, capas, convenciones de implementación (§ 3.1) |
+| 4 | `services/ordering-service/.../domain/messaging/contracts.md` | Comandos/eventos según código |
+| 5 | `ralph/prompt-*.md` | Orquestación por fase (infra / features / hitl / cleanup) — **sin** duplicar PRD ni SAD |
+| 6 | Skill `/tdd` (`.cursor/tdd/`) | Disciplina RED-GREEN-REFACTOR y Jest — **genérico**, portable |
+
+**Flujo en fase features (issues 004–014):** `/ralph {NNN}` → leer issue + secciones del PRD citadas → aplicar SAD § 3.1 → `/tdd` → `npm test`.
+
+**Reglas para el agente:**
+
+- No inventar requisitos ausentes del issue o del PRD.
+- Leer solo las secciones del PRD referenciadas por la issue (no el archivo completo salvo necesidad).
+- No volver a leer archivos ya presentes en el contexto del chat (issue, PRD, SAD adjuntos o leídos en la misma ventana).
+- No copiar el PRD ni el SAD dentro de comentarios de código ni en nuevos markdown de especificación.
+- Al añadir comando/evento de stream: actualizar esta sección de contratos (si aplica), `contracts.md` y Zod en ambos servicios.
+
+**Pruebas:** ver sección **Testing Decisions** de este PRD. El skill `/tdd` define el ciclo; el PRD define alcance y capas.
+
 ### Máquina de estados conversacional
 
 Estados previstos: registro (`AWAITING_REGISTRATION_NAME` → `AWAITING_REGISTRATION_ADDRESS`), confirmación de dirección (`CONFIRMING_ADDRESS`), catálogo (`AWAITING_CATALOG` — espera `CatalogLoaded` tras `GetProductCatalog`), selección de producto (`SELECTING_PRODUCT` → `AWAITING_QUANTITY` → `PROVIDING_MENU`), dirección de entrega puntual (`AWAITING_DELIVERY_ADDRESS` — captura NUEVA sin invocar `UpdateClientAddress`), confirmación de pedido (`CONFIRMING_ORDER`). Sesión nula equivale a inicio de flujo ante cualquier mensaje entrante válido.

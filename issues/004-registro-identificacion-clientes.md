@@ -38,3 +38,6 @@ Validación con Zod en dominio de Ordering; validadores conversacionales en domi
 - User story 70
 - User story 78
 - User story 87
+
+## Alcance reproceso: 
+solo refactor incremental

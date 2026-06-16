@@ -8,7 +8,7 @@ description: >-
 
 # Test-Driven Development
 
-Generic TDD workflow for this repository. For **architecture and test scope** per task, consult the PRD, README, or orchestrator prompts (e.g. `/ralph`).
+Generic TDD workflow for this repository. For **scope, architecture, and test layers** per task, consult `issues/prd.md` (**Jerarquía de especificaciones**, **Testing Decisions**) and `.cursor/arquitecture/SAD.md` § 3.1 — do not duplicate those rules here.
 
 ## Stack (this project)
 

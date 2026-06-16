@@ -37,3 +37,6 @@ Verificable ejecutando `docker compose up` en la laptop y confirmando health che
 - User story 70
 - User story 71
 - User story 80
+
+## Alcance reproceso: 
+solo refactor incremental

@@ -14,10 +14,15 @@ Execute **exactly one** issue per invocation. The user provides the issue number
 
 1. Normalize the number to three digits (`6` → `006`, `001` → `001`).
 2. Find the file: `issues/{NNN}-*.md` (exactly one match).
-3. Read the issue completely. Read `issues/prd.md` sections referenced by the issue.
-4. Read `ralph/phases.md` to determine the **phase** for this number.
+3. Read the issue completely — unless already in context (see below).
+4. Read PRD sections referenced by the issue — see **Jerarquía de especificaciones** in `issues/prd.md`; not the full PRD by default.
+5. Read `ralph/phases.md` to determine the **phase** for this number.
 
 If the file does not exist, stop and tell the user.
+
+### Context reuse
+
+Do not re-read issue, PRD sections, SAD, or phase prompts already in the chat (`@` attachments or prior read in this window). Read from disk only when context is missing or files may have changed.
 
 ## 2. Check blockers
 
@@ -38,9 +43,9 @@ Parse the issue's `## Blocked by` section:
 
 Read the prompt file for the phase **in full** and follow it.
 
-## 4. Context
+## 4. Repo context
 
-Review recent commits: `git log -n 5 --oneline`.
+If the repo uses git: `git log -n 5 --oneline` (optional context for continuity). Skip if not a git repository.
 
 Explore the repo only as needed for the current issue. Do not start other issues.
 
@@ -72,4 +77,4 @@ One commit per issue when work is complete (or one WIP commit only if the user a
 - **ONE issue per invocation** — never pick the next task automatically.
 - **Do not skip phase routing** — 001–003 never use `/tdd`; 004–014 must use `/tdd`.
 - Stack: **Node.js, JavaScript, Jest, Express, PostgreSQL, Redis** — no TypeScript, no `npm run typecheck`.
-- Architecture: follow `issues/prd.md` and `.cursor/arquitecture/SAD.md`.
+- Architecture: `issues/prd.md` + `.cursor/arquitecture/SAD.md` § 3.1 (see PRD **Jerarquía de especificaciones**).

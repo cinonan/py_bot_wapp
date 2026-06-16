@@ -34,3 +34,6 @@ Contratos documentados en el bounded context de ordering (referencia PRD secció
 - User story 49
 - User story 66
 - User story 82
+
+## Alcance reproceso: 
+solo refactor incremental
