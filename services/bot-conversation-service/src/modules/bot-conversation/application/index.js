@@ -1,6 +1,7 @@
-/**
- * Bot-conversation bounded context — application layer placeholder.
- * State handlers and routing will be added in feature issues.
- */
+const { createHandleConversationMessage } = require('./handleConversationMessage');
+const { createWebhookHandler } = require('./webhookHandler');
 
-module.exports = {};
+module.exports = {
+  createHandleConversationMessage,
+  createWebhookHandler,
+};

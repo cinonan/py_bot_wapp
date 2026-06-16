@@ -1,4 +1,4 @@
-const { createStreamConsumer } = require('../infrastructure/redis/streamConsumer');
+const { createStreamConsumer } = require('./streamConsumer');
 
 function createOrderingStreamConsumer({ redis, handleStreamCommand }) {
   return createStreamConsumer({

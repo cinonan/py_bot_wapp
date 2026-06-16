@@ -5,7 +5,7 @@ const { createStreamPublisher } = require('../modules/ordering/infrastructure/re
 const { createGetClientByPhone } = require('../modules/ordering/application/getClientByPhone');
 const { createRegisterClient } = require('../modules/ordering/application/registerClient');
 const { createHandleStreamCommand } = require('../modules/ordering/application/handleStreamCommand');
-const { createOrderingStreamConsumer } = require('../modules/ordering/application/startStreamConsumer');
+const { createOrderingStreamConsumer } = require('../modules/ordering/infrastructure/redis/orderingStreamConsumer');
 
 function createDependencies(config = {}) {
   const databaseUrl = config.databaseUrl || process.env.DATABASE_URL;
