@@ -9,6 +9,8 @@ const { createHandleGetProductByIdCommand } = require('./handleGetProductByIdCom
 const { createHandleAddToCartCommand } = require('./handleAddToCartCommand');
 const { createHandleGetCartCommand } = require('./handleGetCartCommand');
 const { createHandleClearCartCommand } = require('./handleClearCartCommand');
+const { createHandleUpdateClientDniCommand } = require('./handleUpdateClientDniCommand');
+const { createHandlePlaceOrderCommand } = require('./handlePlaceOrderCommand');
 
 function createStreamCommandDispatcher({
   eventPublisher,
@@ -19,6 +21,8 @@ function createStreamCommandDispatcher({
   addToCart,
   getCart,
   clearCart,
+  updateClientDni,
+  placeOrder,
 }) {
   const publishStreamEvent = createPublishStreamEvent(eventPublisher);
 
@@ -51,6 +55,14 @@ function createStreamCommandDispatcher({
     ClearCart: createHandleClearCartCommand({
       publishStreamEvent,
       clearCart,
+    }),
+    UpdateClientDni: createHandleUpdateClientDniCommand({
+      publishStreamEvent,
+      updateClientDni,
+    }),
+    PlaceOrder: createHandlePlaceOrderCommand({
+      publishStreamEvent,
+      placeOrder,
     }),
   };
 

@@ -118,11 +118,29 @@ function validateDeliveryAddress(text) {
   return validateRegistrationAddress(text);
 }
 
+function parseDniResponse(text) {
+  const value = normalizeText(text);
+  if (!value) {
+    return { kind: 'invalid' };
+  }
+
+  if (value.toLowerCase() === 'no') {
+    return { kind: 'skip' };
+  }
+
+  if (/^\d{8}$/.test(value)) {
+    return { kind: 'dni', value };
+  }
+
+  return { kind: 'invalid' };
+}
+
 module.exports = {
   normalizeText,
   validateRegistrationName,
   validateRegistrationAddress,
   validateDeliveryAddress,
+  parseDniResponse,
   isMenuAccessAttempt,
   parseProductSelectionId,
   isMenuAccessAllowed,

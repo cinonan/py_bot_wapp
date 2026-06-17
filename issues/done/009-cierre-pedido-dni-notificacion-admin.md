@@ -10,17 +10,17 @@ Ordering-Service persiste transacción atómica (cabecera + detalle con snapshot
 
 ## Acceptance criteria
 
-- [ ] Resumen de carrito (ítems, cantidades, precios unitarios, total) mostrado antes de confirmar.
-- [ ] DNI opcional: 8 dígitos válidos vía Zod; omitir confirma sin DNI.
-- [ ] `UpdateClientDni` actualiza perfil cuando usuario proporciona DNI.
-- [ ] `PlaceOrder` exige `direccion_entrega`; persiste `dni_facturacion` como snapshot en `pedidos`.
-- [ ] Transacción atómica: cabecera + líneas; rollback ante fallo parcial.
-- [ ] Líneas de `detalle_pedidos` incluyen snapshot de precio y nombre desde carrito Redis.
-- [ ] Estado inicial `pendiente`; fila en `pedido_historial_estados` con origen `PlaceOrder`.
-- [ ] `OrderPlaced` dispara mensaje de confirmación al cliente y notificación detallada a administradora (`ADMIN_ORDER_NOTIFY_PHONE`).
-- [ ] Tras éxito: carrito Redis y sesión conversacional limpiados.
-- [ ] Montos formateados en moneda local en mensajes al cliente.
-- [ ] Pruebas de integración: `PlaceOrder` con `direccion_entrega` obligatoria; pedido completo en PostgreSQL.
+- [x] Resumen de carrito (ítems, cantidades, precios unitarios, total) mostrado antes de confirmar.
+- [x] DNI opcional: 8 dígitos válidos vía Zod; omitir confirma sin DNI.
+- [x] `UpdateClientDni` actualiza perfil cuando usuario proporciona DNI.
+- [x] `PlaceOrder` exige `direccion_entrega`; persiste `dni_facturacion` como snapshot en `pedidos`.
+- [x] Transacción atómica: cabecera + líneas; rollback ante fallo parcial.
+- [x] Líneas de `detalle_pedidos` incluyen snapshot de precio y nombre desde carrito Redis.
+- [x] Estado inicial `pendiente`; fila en `pedido_historial_estados` con origen `PlaceOrder`.
+- [x] `OrderPlaced` dispara mensaje de confirmación al cliente y notificación detallada a administradora (`ADMIN_ORDER_NOTIFY_PHONE`).
+- [x] Tras éxito: carrito Redis y sesión conversacional limpiados.
+- [x] Montos formateados en moneda local en mensajes al cliente.
+- [x] Pruebas de integración: `PlaceOrder` con `direccion_entrega` obligatoria; pedido completo en PostgreSQL.
 
 ## Blocked by
 

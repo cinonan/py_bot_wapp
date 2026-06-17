@@ -1,4 +1,5 @@
 const { DuplicateClientError } = require('../../domain/client/duplicateClientError');
+const { DuplicateDniError } = require('../../domain/client/duplicateDniError');
 
 /**
  * @typedef {object} ClientRecord
@@ -13,6 +14,7 @@ const { DuplicateClientError } = require('../../domain/client/duplicateClientErr
  * @typedef {object} ClientRepositoryPort
  * @property {(telefono: string) => Promise<ClientRecord|null>} findByPhone
  * @property {(data: { telefono: string, nombre: string, direccion_principal: string }) => Promise<ClientRecord>} create
+ * @property {(telefono: string, dni: string) => Promise<ClientRecord>} updateDni
  */
 
 /**
@@ -45,6 +47,30 @@ function createClientRepository(pool) {
       } catch (error) {
         if (error && error.code === '23505') {
           throw new DuplicateClientError();
+        }
+
+        throw error;
+      }
+    },
+
+    async updateDni(telefono, dni) {
+      try {
+        const result = await pool.query(
+          `UPDATE clientes
+           SET dni = $2
+           WHERE telefono = $1
+           RETURNING id, telefono, nombre, direccion_principal, dni`,
+          [telefono, dni],
+        );
+
+        if (result.rowCount === 0) {
+          return null;
+        }
+
+        return result.rows[0];
+      } catch (error) {
+        if (error && error.code === '23505') {
+          throw new DuplicateDniError();
         }
 
         throw error;

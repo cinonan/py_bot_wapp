@@ -1,9 +1,10 @@
 const { createConversationStateRouter } = require('./conversationStateRouter');
 
-function createHandleConversationMessage({ sessionStore, streamCommandClient }) {
+function createHandleConversationMessage({ sessionStore, streamCommandClient, adminOrderNotifyPhone }) {
   const routeConversationMessage = createConversationStateRouter({
     sessionStore,
     streamCommandClient,
+    adminOrderNotifyPhone,
   });
 
   return async function handleConversationMessage({ phone, text, wamid }) {

@@ -42,6 +42,8 @@ Todo mensaje en ambos streams incluye:
 | `AddToCart` | `{ productId, cantidad }` | `CartUpdated` / `AddToCartFailed` |
 | `GetCart` | `{}` | `CartUpdated` |
 | `ClearCart` | `{}` | `CartUpdated` |
+| `UpdateClientDni` | `{ dni }` | `ClientDniUpdated` / `UpdateClientDniFailed` |
+| `PlaceOrder` | `{ direccion_entrega, dni_facturacion? }` | `OrderPlaced` / `OrderPlaceFailed` |
 
 Comandos de negocio (`RegisterClient`, `GetProductCatalog`, etc.) se documentan en el PRD y se implementan en issues de features.
 
@@ -60,6 +62,9 @@ Comandos de negocio (`RegisterClient`, `GetProductCatalog`, etc.) se documentan 
 | `CatalogLoadFailed` | `{ reason, issues? \| message? }` | Error al obtener catálogo |
 | `CartUpdated` | `{ items: [{ productId, cantidad, precio_unitario, nombre_producto }], subtotal }` | Carrito modificado o consultado |
 | `AddToCartFailed` | `{ reason, issues? \| message? }` | Validación o producto inexistente al agregar |
+| `ClientDniUpdated` | `{ client }` | DNI de perfil actualizado |
+| `UpdateClientDniFailed` | `{ reason, issues? \| message? }` | Error al actualizar DNI |
+| `OrderPlaced` | `{ order, client }` | Pedido persistido con detalle y total |
 | `OrderPlaceFailed` | `{ reason, issues? \| message? }` | Error al colocar pedido |
 | `OrderDispatchFailed` | `{ reason, issues? \| message? }` | Error al despachar pedido administrativo |
 

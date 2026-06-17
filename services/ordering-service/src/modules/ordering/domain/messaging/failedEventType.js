@@ -1,6 +1,7 @@
 const COMMAND_FAILED_EVENTS = {
   RegisterClient: 'RegisterClientFailed',
   GetProductCatalog: 'CatalogLoadFailed',
+  UpdateClientDni: 'UpdateClientDniFailed',
   PlaceOrder: 'OrderPlaceFailed',
   DispatchOrder: 'OrderDispatchFailed',
 };

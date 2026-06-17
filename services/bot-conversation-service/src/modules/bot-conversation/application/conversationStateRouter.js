@@ -8,8 +8,9 @@ const { createHandleSelectingProductMessage } = require('./handleSelectingProduc
 const { createHandleAwaitingQuantityMessage } = require('./handleAwaitingQuantityMessage');
 const { createHandleProvidingMenuMessage } = require('./handleProvidingMenuMessage');
 const { createHandleAwaitingDeliveryAddressMessage } = require('./handleAwaitingDeliveryAddressMessage');
+const { createHandleConfirmingOrderMessage } = require('./handleConfirmingOrderMessage');
 
-function createConversationStateRouter({ sessionStore, streamCommandClient }) {
+function createConversationStateRouter({ sessionStore, streamCommandClient, adminOrderNotifyPhone }) {
   const stateHandlers = {
     [CONVERSATION_STATE.AWAITING_REGISTRATION_NAME]: createHandleAwaitingRegistrationNameMessage({
       sessionStore,
@@ -41,6 +42,11 @@ function createConversationStateRouter({ sessionStore, streamCommandClient }) {
     [CONVERSATION_STATE.AWAITING_DELIVERY_ADDRESS]: createHandleAwaitingDeliveryAddressMessage({
       sessionStore,
       streamCommandClient,
+    }),
+    [CONVERSATION_STATE.CONFIRMING_ORDER]: createHandleConfirmingOrderMessage({
+      sessionStore,
+      streamCommandClient,
+      adminOrderNotifyPhone,
     }),
   };
 

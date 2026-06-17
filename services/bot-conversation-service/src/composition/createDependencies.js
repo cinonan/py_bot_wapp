@@ -37,6 +37,7 @@ function createDependencies(config = {}) {
   );
   const verifyToken = config.verifyToken || process.env.WA_VERIFY_TOKEN;
   const appSecret = config.appSecret || process.env.WA_APP_SECRET;
+  const adminOrderNotifyPhone = config.adminOrderNotifyPhone || process.env.ADMIN_ORDER_NOTIFY_PHONE || '';
   const sessionTtlSeconds = Number(
     config.sessionTtlSeconds || process.env.SESSION_TTL_SECONDS || SESSION_TTL_SECONDS,
   );
@@ -59,6 +60,7 @@ function createDependencies(config = {}) {
   const handleConversationMessage = createHandleConversationMessage({
     sessionStore,
     streamCommandClient,
+    adminOrderNotifyPhone,
   });
   const webhookHandler = createWebhookHandler({
     handleConversationMessage,

@@ -8,10 +8,12 @@ const {
   validateCartQuantity,
   parseProvidingMenuChoice,
   validateDeliveryAddress,
+  parseDniResponse,
 } = require('./validators');
 const { parseClientFoundPayload } = require('../messaging/clientEventSchemas');
 const { parseCatalogLoadedPayload, parseProductResolvedPayload } = require('../messaging/catalogEventSchemas');
 const { parseCartUpdatedPayload } = require('../messaging/cartEventSchemas');
+const { parseOrderPlacedPayload } = require('../messaging/orderEventSchemas');
 const {
   formatCatalogMenu,
   formatEmptyCatalogMessage,
@@ -21,6 +23,10 @@ const {
   formatCartAddedMessage,
   formatCartSummary,
 } = require('./cartFormatting');
+const {
+  formatOrderConfirmationMessage,
+  formatAdminOrderNotification,
+} = require('./orderFormatting');
 
 const MESSAGES = {
   askName:
@@ -59,8 +65,18 @@ const MESSAGES = {
     'Tu carrito está vacío. Primero agrega al menos un producto.',
   invalidProvidingMenuChoice:
     'Responde con una opción válida:\n1. Ver Menú\n2. Confirmar Pedido',
-  confirmOrderReady:
-    'Perfecto. Continuaremos con la confirmación de tu pedido en el siguiente paso.',
+  askDni:
+    '¿Deseas boleta con DNI? Escribe el número (8 dígitos) o responde "No".',
+  invalidDni:
+    'Si deseas boleta con DNI, escribe exactamente 8 dígitos. Si no, responde "No".',
+  missingDeliveryAddress:
+    'No tengo una dirección de entrega válida para este pedido. Escribe "hola" para reiniciar.',
+  orderPlaceFailed:
+    'Hubo un error al registrar tu pedido. Tu carrito sigue guardado; intenta de nuevo en unos minutos.',
+  dniSaveFailed:
+    'Tu pedido quedó registrado, pero no pudimos guardar el DNI (puede estar duplicado). Si necesitas boleta, contacta a la tienda.',
+  emptyCartOnOrderConfirm:
+    'Tu carrito quedó vacío. Agrega productos con la opción 1 (Ver Menú).',
 };
 
 function mapClientLookupResponse(response) {
@@ -501,7 +517,7 @@ function formatOrderSummaryMessage({ items, subtotal, direccionEntrega }) {
     `Subtotal: *${formatCurrency(subtotal)}*`,
     `Dirección de entrega: ${direccionEntrega}`,
     '',
-    MESSAGES.confirmOrderReady,
+    MESSAGES.askDni,
   ].join('\n');
 }
 
@@ -625,6 +641,99 @@ function mapDeliveryAddressConfirmResponse(session, response) {
   };
 }
 
+function handleConfirmingOrderTurn(session, text) {
+  const parsed = parseDniResponse(text);
+  if (parsed.kind === 'invalid') {
+    return {
+      replies: [MESSAGES.invalidDni],
+      session,
+      shouldPlaceOrder: false,
+    };
+  }
+
+  const direccionEntrega = session.metadata?.direccionEntrega;
+  if (!direccionEntrega) {
+    return {
+      replies: [MESSAGES.missingDeliveryAddress],
+      session,
+      shouldPlaceOrder: false,
+    };
+  }
+
+  return {
+    replies: [],
+    session,
+    shouldPlaceOrder: true,
+    placeOrderPayload: {
+      direccion_entrega: direccionEntrega,
+      ...(parsed.kind === 'dni' ? { dni_facturacion: parsed.value } : {}),
+    },
+    ...(parsed.kind === 'dni'
+      ? { shouldUpdateClientDni: true, dni: parsed.value }
+      : {}),
+  };
+}
+
+function mapPlaceOrderResponse(session, response, { adminOrderNotifyPhone, customerPhone }) {
+  if (response.timedOut) {
+    return {
+      replies: [response.waitingMessage],
+      session,
+    };
+  }
+
+  if (response.type === 'OrderPlaceFailed') {
+    return {
+      replies: [MESSAGES.orderPlaceFailed],
+      session,
+    };
+  }
+
+  if (response.type === 'OrderPlaced') {
+    const { order, client } = parseOrderPlacedPayload(response.payload);
+    const customerName = session.metadata?.name || client.nombre;
+
+    const result = {
+      replies: [
+        formatOrderConfirmationMessage({
+          orderId: order.id,
+          total: order.total,
+        }),
+      ],
+      session: null,
+    };
+
+    if (adminOrderNotifyPhone) {
+      result.notifications = [{
+        phone: adminOrderNotifyPhone,
+        text: formatAdminOrderNotification({
+          orderId: order.id,
+          customerName,
+          customerPhone,
+          deliveryAddress: order.direccion_entrega,
+          items: order.items,
+          total: order.total,
+        }),
+      }];
+    }
+
+    return result;
+  }
+
+  return {
+    replies: [MESSAGES.orderPlaceFailed],
+    session,
+  };
+}
+
+function buildDniUpdateWarningTransition(session, placeOrderTransition) {
+  return {
+    replies: [MESSAGES.dniSaveFailed, ...placeOrderTransition.replies],
+    session: placeOrderTransition.session,
+    notifications: placeOrderTransition.notifications,
+  };
+}
+
 module.exports = {
   MESSAGES,
   mapClientLookupResponse,
@@ -642,6 +751,10 @@ module.exports = {
   mapAddToCartResponse,
   handleProvidingMenuTurn,
   mapGetCartForConfirmResponse,
+  formatOrderSummaryMessage,
   handleAwaitingDeliveryAddressTurn,
   mapDeliveryAddressConfirmResponse,
+  handleConfirmingOrderTurn,
+  mapPlaceOrderResponse,
+  buildDniUpdateWarningTransition,
 };

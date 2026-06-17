@@ -28,6 +28,12 @@ function createWebhookHandler({
     for (const reply of result.replies) {
       await messageSender.sendTextMessage(incoming.phone, reply);
     }
+
+    if (Array.isArray(result.notifications)) {
+      for (const notification of result.notifications) {
+        await messageSender.sendTextMessage(notification.phone, notification.text);
+      }
+    }
   }
 
   return async function handleWebhook(req, res) {
