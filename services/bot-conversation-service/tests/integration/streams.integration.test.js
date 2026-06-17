@@ -1,6 +1,8 @@
 const fs = require('fs');
 const path = require('path');
 const { createClient } = require('redis');
+const { runMigrations } = require('../../../ordering-service/scripts/migrate');
+const { runDockerCompose } = require('../../../ordering-service/tests/integration/dockerCompose');
 const { createTestDependencies: createBotDependencies } = require('../../src/composition/createTestDependencies');
 const {
   createTestDependencies: createOrderingDependencies,
@@ -13,10 +15,46 @@ const {
 } = require('../../../ordering-service/src/modules/ordering/domain/messaging/streams');
 
 const TEST_ENV_FILE = path.join(__dirname, '.test-env.json');
+const ORDERING_SERVICE_ROOT = path.join(__dirname, '..', '..', '..', 'ordering-service');
+const ORDERING_TEST_ENV_FILE = path.join(ORDERING_SERVICE_ROOT, 'tests', 'integration', '.test-env.json');
+const ORDERING_COMPOSE_FILE = path.join(ORDERING_SERVICE_ROOT, 'docker-compose.test.yml');
+const DEFAULT_ORDERING_DATABASE_URL =
+  'postgresql://ordering_test:ordering_test@localhost:5433/ordering_test';
 
 function getTestRedisUrl() {
   const env = JSON.parse(fs.readFileSync(TEST_ENV_FILE, 'utf8'));
   return env.REDIS_URL;
+}
+
+function getOrderingDatabaseUrl() {
+  if (process.env.INTEGRATION_DATABASE_URL) {
+    return process.env.INTEGRATION_DATABASE_URL;
+  }
+
+  if (fs.existsSync(ORDERING_TEST_ENV_FILE)) {
+    const env = JSON.parse(fs.readFileSync(ORDERING_TEST_ENV_FILE, 'utf8'));
+    if (env.DATABASE_URL) {
+      return env.DATABASE_URL;
+    }
+  }
+
+  return DEFAULT_ORDERING_DATABASE_URL;
+}
+
+async function ensurePostgresReady(databaseUrl) {
+  if (process.env.INTEGRATION_DATABASE_URL) {
+    return;
+  }
+
+  runDockerCompose(`-f "${ORDERING_COMPOSE_FILE}" up -d --wait postgres-test`, ORDERING_SERVICE_ROOT);
+  const { createPool } = require('../../../ordering-service/src/modules/ordering/infrastructure/postgres/pool');
+  const pool = createPool(databaseUrl);
+
+  try {
+    await pool.query('SELECT 1');
+  } finally {
+    await pool.end();
+  }
 }
 
 function sleep(ms) {
@@ -33,6 +71,11 @@ describe('Redis Streams request-reply integration', () => {
 
   beforeAll(async () => {
     redisUrl = getTestRedisUrl();
+    const databaseUrl = getOrderingDatabaseUrl();
+
+    await ensurePostgresReady(databaseUrl);
+    await runMigrations(databaseUrl);
+
     adminRedis = createClient({ url: redisUrl });
     await adminRedis.connect();
     await adminRedis.flushDb();
@@ -43,15 +86,22 @@ describe('Redis Streams request-reply integration', () => {
     });
     orderingDeps = createOrderingDependencies({
       redisUrl,
-      databaseUrl: 'postgresql://streams_test:streams_test@localhost:5432/streams_test',
+      databaseUrl,
     });
 
     await botDeps.redis.connect();
     await orderingDeps.redis.connect();
 
+    await orderingDeps.pool.query('DELETE FROM comandos_procesados');
+
     await botDeps.streamEventConsumer.start();
     await orderingDeps.streamConsumer.start();
-    await sleep(300);
+
+    await botDeps.streamCommandClient.sendPing({
+      wamid: `wamid.streams.integration.warmup.${Date.now()}`,
+      phone: '51999001000',
+    });
+    await sleep(500);
   });
 
   afterAll(async () => {
