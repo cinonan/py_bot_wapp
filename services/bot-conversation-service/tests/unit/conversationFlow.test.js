@@ -114,7 +114,7 @@ describe('conversation state transitions', () => {
     expect(transition.replies[0]).toContain('MISMA');
   });
 
-  test('marks address confirmed after MISMA/NUEVA', () => {
+  test('marks address confirmed after MISMA with resolved delivery address', () => {
     const session = {
       state: CONVERSATION_STATE.CONFIRMING_ADDRESS,
       metadata: { name: 'Ana', savedAddress: 'Calle 1' },
@@ -123,7 +123,8 @@ describe('conversation state transitions', () => {
     const transition = handleConfirmingAddressTurn(session, 'MISMA');
 
     expect(transition.session.metadata.addressConfirmed).toBe(true);
-    expect(transition.replies[0]).toContain('Ver Menú');
+    expect(transition.session.metadata.direccionEntrega).toBe('Calle 1');
+    expect(transition.replies[0]).toContain('dirección guardada');
   });
 
   test('requests catalog load when menu is accessed without cache', () => {
@@ -248,10 +249,14 @@ describe('conversation state transitions', () => {
     expect(transition.session.metadata.selectedProduct).toBeUndefined();
   });
 
-  test('providing menu option 2 advances toward confirmation when cart has items', () => {
+  test('providing menu option 2 advances toward confirmation when cart has items and address resolved', () => {
     const session = {
       state: CONVERSATION_STATE.PROVIDING_MENU,
-      metadata: {},
+      metadata: {
+        deliveryAddressChoice: 'misma',
+        direccionEntrega: 'Calle 1',
+        addressConfirmed: true,
+      },
     };
 
     const choice = handleProvidingMenuTurn(session, '2');

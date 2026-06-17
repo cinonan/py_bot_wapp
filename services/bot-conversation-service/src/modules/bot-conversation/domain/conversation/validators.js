@@ -114,10 +114,15 @@ function parseProvidingMenuChoice(text) {
   return null;
 }
 
+function validateDeliveryAddress(text) {
+  return validateRegistrationAddress(text);
+}
+
 module.exports = {
   normalizeText,
   validateRegistrationName,
   validateRegistrationAddress,
+  validateDeliveryAddress,
   isMenuAccessAttempt,
   parseProductSelectionId,
   isMenuAccessAllowed,

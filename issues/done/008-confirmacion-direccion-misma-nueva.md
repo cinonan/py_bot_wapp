@@ -13,13 +13,13 @@ Estado `CONFIRMING_ADDRESS` para clientes recurrentes; flujo integrado con carri
 
 ## Acceptance criteria
 
-- [ ] Cliente recurrente elige MISMA o NUEVA en `CONFIRMING_ADDRESS`.
-- [ ] MISMA resuelve `direccion_entrega` desde perfil (`GetClientByPhone` / sesión) sin `UpdateClientAddress`.
-- [ ] NUEVA transiciona a `AWAITING_DELIVERY_ADDRESS`, captura texto y guarda `direccionEntrega` en sesión.
-- [ ] Dirección NUEVA no modifica `clientes.direccion_principal`.
-- [ ] Entrada vacía o inválida en dirección produce mensaje de error sin perder carrito.
-- [ ] Tras resolver dirección, flujo avanza a resumen/`CONFIRMING_ORDER` con carrito intacto.
-- [ ] Pruebas unitarias de resolución MISMA/NUEVA en dominio conversacional.
+- [x] Cliente recurrente elige MISMA o NUEVA en `CONFIRMING_ADDRESS`.
+- [x] MISMA resuelve `direccion_entrega` desde perfil (`GetClientByPhone` / sesión) sin `UpdateClientAddress`.
+- [x] NUEVA transiciona a `AWAITING_DELIVERY_ADDRESS`, captura texto y guarda `direccionEntrega` en sesión.
+- [x] Dirección NUEVA no modifica `clientes.direccion_principal`.
+- [x] Entrada vacía o inválida en dirección produce mensaje de error sin perder carrito.
+- [x] Tras resolver dirección, flujo avanza a resumen/`CONFIRMING_ORDER` con carrito intacto.
+- [x] Pruebas unitarias de resolución MISMA/NUEVA en dominio conversacional.
 
 ## Blocked by
 

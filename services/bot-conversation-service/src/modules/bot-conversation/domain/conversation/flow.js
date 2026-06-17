@@ -7,6 +7,7 @@ const {
   isMenuAccessAllowed,
   validateCartQuantity,
   parseProvidingMenuChoice,
+  validateDeliveryAddress,
 } = require('./validators');
 const { parseClientFoundPayload } = require('../messaging/clientEventSchemas');
 const { parseCatalogLoadedPayload, parseProductResolvedPayload } = require('../messaging/catalogEventSchemas');
@@ -18,6 +19,7 @@ const {
 } = require('./catalogFormatting');
 const {
   formatCartAddedMessage,
+  formatCartSummary,
 } = require('./cartFormatting');
 
 const MESSAGES = {
@@ -31,8 +33,12 @@ const MESSAGES = {
   registrationComplete: (name) => `Registro completado, ${name}.`,
   invalidAddressChoice:
     'Responde MISMA para usar tu dirección guardada o NUEVA para indicar otra.',
-  addressConfirmed:
-    'Dirección confirmada. Escribe *Ver Menú* para ver los productos disponibles.',
+  addressConfirmedMisma:
+    'Perfecto, usaré tu dirección guardada para este pedido.\nEscribe *Ver Menú* para ver los productos disponibles.',
+  addressConfirmedNueva:
+    'Entendido, indicarás una dirección nueva al confirmar tu pedido.\nEscribe *Ver Menú* para ver los productos disponibles.',
+  askDeliveryAddress:
+    'Para este pedido necesito la dirección de entrega. Envíala en un solo mensaje.',
   catalogPending:
     'Estamos cargando el menú. Intenta de nuevo en un momento o escribe *Ver Menú*.',
   catalogLoadFailed:
@@ -175,16 +181,32 @@ function handleConfirmingAddressTurn(session, text) {
   }
 
   const answer = String(text ?? '').trim().toLowerCase();
-  if (answer === 'misma' || answer === 'nueva') {
+  if (answer === 'misma') {
+    const savedAddress = session.metadata?.savedAddress || '';
+
     return {
-      replies: [MESSAGES.addressConfirmed],
+      replies: [MESSAGES.addressConfirmedMisma],
       session: {
         ...session,
         metadata: {
           ...session.metadata,
           addressConfirmed: true,
-          deliveryAddressChoice: answer,
+          deliveryAddressChoice: 'misma',
+          direccionEntrega: savedAddress,
         },
+      },
+    };
+  }
+
+  if (answer === 'nueva') {
+    const metadata = { ...session.metadata, addressConfirmed: true, deliveryAddressChoice: 'nueva' };
+    delete metadata.direccionEntrega;
+
+    return {
+      replies: [MESSAGES.addressConfirmedNueva],
+      session: {
+        ...session,
+        metadata,
       },
     };
   }
@@ -470,6 +492,24 @@ function handleProvidingMenuTurn(session, text) {
   };
 }
 
+function formatOrderSummaryMessage({ items, subtotal, direccionEntrega }) {
+  return [
+    'Resumen de tu pedido:',
+    '',
+    formatCartSummary(items),
+    '',
+    `Subtotal: *${formatCurrency(subtotal)}*`,
+    `Dirección de entrega: ${direccionEntrega}`,
+    '',
+    MESSAGES.confirmOrderReady,
+  ].join('\n');
+}
+
+function needsDeliveryAddressCapture(session) {
+  return session.metadata?.deliveryAddressChoice === 'nueva'
+    && !session.metadata?.direccionEntrega;
+}
+
 function mapGetCartForConfirmResponse(session, response) {
   if (response.timedOut) {
     return {
@@ -479,7 +519,7 @@ function mapGetCartForConfirmResponse(session, response) {
   }
 
   if (response.type === 'CartUpdated') {
-    const { items } = parseCartUpdatedPayload(response.payload);
+    const { items, subtotal } = parseCartUpdatedPayload(response.payload);
     if (!items.length) {
       return {
         replies: [MESSAGES.emptyCartOnConfirm],
@@ -487,8 +527,91 @@ function mapGetCartForConfirmResponse(session, response) {
       };
     }
 
+    if (needsDeliveryAddressCapture(session)) {
+      return {
+        replies: [MESSAGES.askDeliveryAddress],
+        session: {
+          ...session,
+          state: CONVERSATION_STATE.AWAITING_DELIVERY_ADDRESS,
+        },
+      };
+    }
+
+    const direccionEntrega = session.metadata?.direccionEntrega;
+    if (!direccionEntrega) {
+      return {
+        replies: [MESSAGES.addToCartFailed],
+        session,
+      };
+    }
+
     return {
-      replies: [MESSAGES.confirmOrderReady],
+      replies: [formatOrderSummaryMessage({ items, subtotal, direccionEntrega })],
+      session: {
+        ...session,
+        state: CONVERSATION_STATE.CONFIRMING_ORDER,
+      },
+    };
+  }
+
+  return {
+    replies: [MESSAGES.addToCartFailed],
+    session,
+  };
+}
+
+function handleAwaitingDeliveryAddressTurn(session, text) {
+  const validation = validateDeliveryAddress(text);
+  if (!validation.valid) {
+    return {
+      replies: [validation.message],
+      session,
+    };
+  }
+
+  return {
+    replies: [],
+    session: {
+      ...session,
+      metadata: {
+        ...session.metadata,
+        direccionEntrega: validation.value,
+      },
+    },
+    shouldGetCartForSummary: true,
+  };
+}
+
+function mapDeliveryAddressConfirmResponse(session, response) {
+  if (response.timedOut) {
+    return {
+      replies: [response.waitingMessage],
+      session,
+    };
+  }
+
+  if (response.type === 'CartUpdated') {
+    const { items, subtotal } = parseCartUpdatedPayload(response.payload);
+    if (!items.length) {
+      return {
+        replies: [MESSAGES.emptyCartOnConfirm],
+        session: {
+          ...session,
+          state: CONVERSATION_STATE.PROVIDING_MENU,
+        },
+      };
+    }
+
+    const direccionEntrega = session.metadata?.direccionEntrega;
+    if (!direccionEntrega) {
+      return {
+        replies: [MESSAGES.askDeliveryAddress],
+        session,
+      };
+    }
+
+    return {
+      replies: [formatOrderSummaryMessage({ items, subtotal, direccionEntrega })],
       session: {
         ...session,
         state: CONVERSATION_STATE.CONFIRMING_ORDER,
@@ -519,4 +642,6 @@ module.exports = {
   mapAddToCartResponse,
   handleProvidingMenuTurn,
   mapGetCartForConfirmResponse,
+  handleAwaitingDeliveryAddressTurn,
+  mapDeliveryAddressConfirmResponse,
 };

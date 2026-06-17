@@ -119,6 +119,9 @@ describe('cart conversational integration', () => {
     await botDeps.sessionStore.set(phone, {
       state: CONVERSATION_STATE.SELECTING_PRODUCT,
       metadata: {
+        deliveryAddressChoice: 'misma',
+        direccionEntrega: 'Av. Integración 100',
+        addressConfirmed: true,
         catalogCache: [
           { id: 1, nombre: 'Arroz con pollo', precio: '18.50' },
           { id: 2, nombre: 'Ají de gallina', precio: '16.00' },
