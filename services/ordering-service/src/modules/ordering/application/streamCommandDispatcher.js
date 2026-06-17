@@ -10,6 +10,7 @@ const { createHandleGetCartCommand } = require('./handleGetCartCommand');
 const { createHandleClearCartCommand } = require('./handleClearCartCommand');
 const { createHandleUpdateClientDniCommand } = require('./handleUpdateClientDniCommand');
 const { createHandlePlaceOrderCommand } = require('./handlePlaceOrderCommand');
+const { createHandleDispatchOrderCommand } = require('./handleDispatchOrderCommand');
 
 function createStreamCommandDispatcher({
   publishStreamEvent,
@@ -22,6 +23,7 @@ function createStreamCommandDispatcher({
   clearCart,
   updateClientDni,
   placeOrder,
+  dispatchOrder,
 }) {
   const commandDispatcher = {
     Ping: createHandlePingCommand({ publishStreamEvent }),
@@ -60,6 +62,10 @@ function createStreamCommandDispatcher({
     PlaceOrder: createHandlePlaceOrderCommand({
       publishStreamEvent,
       placeOrder,
+    }),
+    DispatchOrder: createHandleDispatchOrderCommand({
+      publishStreamEvent,
+      dispatchOrder,
     }),
   };
 

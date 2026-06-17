@@ -25,6 +25,15 @@
  *   total: string,
  *   items: OrderLineInput[],
  * }) => Promise<CreatedOrder>} createWithDetails
+ * @property {(orderId: number) => Promise<{
+ *   ok: true,
+ *   order: { id: number, total: string, estado: string, direccion_entrega: string|null, fecha_atencion: string },
+ *   client: { id: number, nombre: string, telefono: string },
+ * } | {
+ *   ok: false,
+ *   reason: 'order_not_found' | 'invalid_state',
+ *   currentState?: string,
+ * }>} dispatchFromPendiente
  */
 
 /**
@@ -78,6 +87,79 @@ function createOrderRepository(pool) {
 
         await client.query('COMMIT');
         return order;
+      } catch (error) {
+        await client.query('ROLLBACK');
+        throw error;
+      } finally {
+        client.release();
+      }
+    },
+
+    async dispatchFromPendiente(orderId) {
+      const client = await pool.connect();
+
+      try {
+        await client.query('BEGIN');
+
+        const orderResult = await client.query(
+          `SELECT p.id, p.estado, p.total, p.direccion_entrega,
+                  c.id AS cliente_id, c.nombre, c.telefono
+           FROM pedidos p
+           JOIN clientes c ON c.id = p.cliente_id
+           WHERE p.id = $1
+           FOR UPDATE`,
+          [orderId],
+        );
+
+        if (orderResult.rows.length === 0) {
+          await client.query('ROLLBACK');
+          return { ok: false, reason: 'order_not_found' };
+        }
+
+        const row = orderResult.rows[0];
+        if (row.estado !== 'pendiente') {
+          await client.query('ROLLBACK');
+          return {
+            ok: false,
+            reason: 'invalid_state',
+            currentState: row.estado,
+          };
+        }
+
+        const updateResult = await client.query(
+          `UPDATE pedidos
+           SET estado = 'en_camino', fecha_atencion = NOW()
+           WHERE id = $1
+           RETURNING id, total, estado, direccion_entrega, fecha_atencion`,
+          [orderId],
+        );
+
+        await client.query(
+          `INSERT INTO pedido_historial_estados
+             (pedido_id, estado_anterior, estado_nuevo, origen)
+           VALUES ($1, 'pendiente', 'en_camino', 'DispatchOrder')`,
+          [orderId],
+        );
+
+        await client.query('COMMIT');
+
+        const order = updateResult.rows[0];
+
+        return {
+          ok: true,
+          order: {
+            id: order.id,
+            total: order.total,
+            estado: order.estado,
+            direccion_entrega: order.direccion_entrega,
+            fecha_atencion: order.fecha_atencion,
+          },
+          client: {
+            id: row.cliente_id,
+            nombre: row.nombre,
+            telefono: row.telefono,
+          },
+        };
       } catch (error) {
         await client.query('ROLLBACK');
         throw error;

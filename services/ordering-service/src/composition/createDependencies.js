@@ -17,6 +17,7 @@ const { createProcessedCommandRepository } = require('../modules/ordering/infras
 const { createProcessedCommandCache } = require('../modules/ordering/infrastructure/redis/processedCommandCache');
 const { createUpdateClientDni } = require('../modules/ordering/application/updateClientDni');
 const { createPlaceOrder } = require('../modules/ordering/application/placeOrder');
+const { createDispatchOrder } = require('../modules/ordering/application/dispatchOrder');
 const { createCommandIdempotency } = require('../modules/ordering/application/commandIdempotency');
 const { createIdempotentDispatchStreamCommand } = require('../modules/ordering/application/idempotentDispatchStreamCommand');
 const { createPublishStreamEvent } = require('../modules/ordering/application/publishStreamEvent');
@@ -55,6 +56,7 @@ function createDependencies(config = {}) {
   const clearCart = createClearCart({ cartStore });
   const updateClientDni = createUpdateClientDni({ clientRepository });
   const placeOrder = createPlaceOrder({ cartStore, clientRepository, orderRepository });
+  const dispatchOrder = createDispatchOrder({ orderRepository });
   const innerDispatchStreamCommand = createStreamCommandDispatcher({
     publishStreamEvent,
     getClientByPhone,
@@ -66,6 +68,7 @@ function createDependencies(config = {}) {
     clearCart,
     updateClientDni,
     placeOrder,
+    dispatchOrder,
   });
   const dispatchStreamCommand = createIdempotentDispatchStreamCommand({
     dispatchStreamCommand: innerDispatchStreamCommand,

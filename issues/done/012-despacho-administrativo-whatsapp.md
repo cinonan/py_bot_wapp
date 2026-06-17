@@ -10,15 +10,15 @@ Rechazo claro para pedido inexistente o estado no despachable (solo `pendiente`)
 
 ## Acceptance criteria
 
-- [ ] Mensaje `Despachar [ID]` interceptado antes de lógica de cliente; parser extrae ID numérico.
-- [ ] Solo teléfono configurado en `ADMIN_ORDER_NOTIFY_PHONE` ejecuta despacho.
-- [ ] `DispatchOrder` actualiza pedido a `en_camino`, setea `fecha_atencion` e inserta historial.
-- [ ] Cliente recibe mensaje coherente con estado `en_camino`.
-- [ ] Administradora recibe confirmación de éxito o error descriptivo.
-- [ ] Pedido inexistente → error claro sin efectos en BD.
-- [ ] Pedido en `en_camino` o `entregado` → rechazo con mensaje claro.
-- [ ] Pruebas unitarias: parser de despacho, regla «solo desde pendiente».
-- [ ] Prueba de integración: despacho exitoso persiste estado e historial.
+- [x] Mensaje `Despachar [ID]` interceptado antes de lógica de cliente; parser extrae ID numérico.
+- [x] Solo teléfono configurado en `ADMIN_ORDER_NOTIFY_PHONE` ejecuta despacho.
+- [x] `DispatchOrder` actualiza pedido a `en_camino`, setea `fecha_atencion` e inserta historial.
+- [x] Cliente recibe mensaje coherente con estado `en_camino`.
+- [x] Administradora recibe confirmación de éxito o error descriptivo.
+- [x] Pedido inexistente → error claro sin efectos en BD.
+- [x] Pedido en `en_camino` o `entregado` → rechazo con mensaje claro.
+- [x] Pruebas unitarias: parser de despacho, regla «solo desde pendiente».
+- [x] Prueba de integración: despacho exitoso persiste estado e historial.
 
 ## Blocked by
 

@@ -13,7 +13,7 @@ const {
 const { parseClientFoundPayload } = require('../messaging/clientEventSchemas');
 const { parseCatalogLoadedPayload, parseProductResolvedPayload } = require('../messaging/catalogEventSchemas');
 const { parseCartUpdatedPayload } = require('../messaging/cartEventSchemas');
-const { parseOrderPlacedPayload } = require('../messaging/orderEventSchemas');
+const { parseOrderPlacedPayload, parseOrderDispatchedPayload } = require('../messaging/orderEventSchemas');
 const {
   formatCatalogMenu,
   formatEmptyCatalogMessage,
@@ -26,6 +26,10 @@ const {
 const {
   formatOrderConfirmationMessage,
   formatAdminOrderNotification,
+  formatDispatchCustomerMessage,
+  formatDispatchSuccessMessage,
+  formatDispatchOrderNotFoundMessage,
+  formatDispatchInvalidStateMessage,
 } = require('./orderFormatting');
 
 const MESSAGES = {
@@ -73,6 +77,12 @@ const MESSAGES = {
     'No tengo una dirección de entrega válida para este pedido. Escribe "hola" para reiniciar.',
   orderPlaceFailed:
     'Hubo un error al registrar tu pedido. Tu carrito sigue guardado; intenta de nuevo en unos minutos.',
+  dispatchUnauthorized:
+    'No tienes permiso para usar el comando de despacho.',
+  dispatchFailed:
+    'Hubo un error al procesar el despacho. Intenta de nuevo en unos minutos.',
+  dispatchTimedOut:
+    'El despacho está tardando más de lo esperado. Intenta de nuevo en un momento.',
   dniSaveFailed:
     'Tu pedido quedó registrado, pero no pudimos guardar el DNI (puede estar duplicado). Si necesitas boleta, contacta a la tienda.',
   emptyCartOnOrderConfirm:
@@ -726,6 +736,52 @@ function mapPlaceOrderResponse(session, response, { adminOrderNotifyPhone, custo
   };
 }
 
+function mapDispatchOrderResponse(response, orderId) {
+  if (response.timedOut) {
+    return {
+      replies: [MESSAGES.dispatchTimedOut],
+    };
+  }
+
+  if (response.type === 'OrderDispatchFailed') {
+    const payload = typeof response.payload === 'string'
+      ? JSON.parse(response.payload)
+      : response.payload;
+
+    if (payload.reason === 'order_not_found') {
+      return {
+        replies: [formatDispatchOrderNotFoundMessage(orderId)],
+      };
+    }
+
+    if (payload.reason === 'invalid_state') {
+      return {
+        replies: [formatDispatchInvalidStateMessage(orderId, payload.currentState || 'desconocido')],
+      };
+    }
+
+    return {
+      replies: [MESSAGES.dispatchFailed],
+    };
+  }
+
+  if (response.type === 'OrderDispatched') {
+    const { order, client } = parseOrderDispatchedPayload(response.payload);
+
+    return {
+      replies: [formatDispatchSuccessMessage(order.id)],
+      notifications: [{
+        phone: client.telefono,
+        text: formatDispatchCustomerMessage(),
+      }],
+    };
+  }
+
+  return {
+    replies: [MESSAGES.dispatchFailed],
+  };
+}
+
 function buildDniUpdateWarningTransition(session, placeOrderTransition) {
   return {
     replies: [MESSAGES.dniSaveFailed, ...placeOrderTransition.replies],
@@ -756,5 +812,6 @@ module.exports = {
   mapDeliveryAddressConfirmResponse,
   handleConfirmingOrderTurn,
   mapPlaceOrderResponse,
+  mapDispatchOrderResponse,
   buildDniUpdateWarningTransition,
 };

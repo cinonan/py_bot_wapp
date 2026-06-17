@@ -44,6 +44,7 @@ Todo mensaje en ambos streams incluye:
 | `ClearCart` | `{}` | `CartUpdated` |
 | `UpdateClientDni` | `{ dni }` | `ClientDniUpdated` / `UpdateClientDniFailed` |
 | `PlaceOrder` | `{ direccion_entrega, dni_facturacion? }` | `OrderPlaced` / `OrderPlaceFailed` |
+| `DispatchOrder` | `{ orderId }` | `OrderDispatched` / `OrderDispatchFailed` |
 
 Comandos de negocio (`RegisterClient`, `GetProductCatalog`, etc.) se documentan en el PRD y se implementan en issues de features.
 
@@ -66,6 +67,7 @@ Comandos de negocio (`RegisterClient`, `GetProductCatalog`, etc.) se documentan 
 | `UpdateClientDniFailed` | `{ reason, issues? \| message? }` | Error al actualizar DNI |
 | `OrderPlaced` | `{ order, client }` | Pedido persistido con detalle y total |
 | `OrderPlaceFailed` | `{ reason, issues? \| message? }` | Error al colocar pedido |
+| `OrderDispatched` | `{ order, client }` | Pedido despachado a `en_camino` |
 | `OrderDispatchFailed` | `{ reason, issues? \| message? }` | Error al despachar pedido administrativo |
 
 ## Política de errores (consumidor Ordering)

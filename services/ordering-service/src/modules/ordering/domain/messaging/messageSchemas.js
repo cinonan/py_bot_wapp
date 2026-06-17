@@ -52,6 +52,10 @@ const placeOrderCommandSchema = streamEnvelopeSchema.extend({
   type: z.literal('PlaceOrder'),
 });
 
+const dispatchOrderCommandSchema = streamEnvelopeSchema.extend({
+  type: z.literal('DispatchOrder'),
+});
+
 const pongEventSchema = streamEnvelopeSchema.extend({
   type: z.literal('Pong'),
 });
@@ -116,6 +120,10 @@ const orderDispatchFailedEventSchema = streamEnvelopeSchema.extend({
   type: z.literal('OrderDispatchFailed'),
 });
 
+const orderDispatchedEventSchema = streamEnvelopeSchema.extend({
+  type: z.literal('OrderDispatched'),
+});
+
 function parseStreamFields(fields) {
   const record = {};
 
@@ -146,6 +154,7 @@ module.exports = {
   clearCartCommandSchema,
   updateClientDniCommandSchema,
   placeOrderCommandSchema,
+  dispatchOrderCommandSchema,
   pongEventSchema,
   clientFoundEventSchema,
   clientNotFoundEventSchema,
@@ -162,6 +171,7 @@ module.exports = {
   clientDniUpdatedEventSchema,
   updateClientDniFailedEventSchema,
   orderDispatchFailedEventSchema,
+  orderDispatchedEventSchema,
   parseStreamFields,
   parseStreamEnvelope,
 };

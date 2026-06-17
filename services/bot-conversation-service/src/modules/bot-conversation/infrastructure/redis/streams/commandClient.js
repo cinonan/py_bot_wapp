@@ -15,6 +15,7 @@ const { ReplyTimeoutError } = require('./replyRegistry');
  * @property {(params: { wamid: string, phone: string }) => Promise<object>} clearCart
  * @property {(params: { wamid: string, phone: string, payload: object }) => Promise<object>} updateClientDni
  * @property {(params: { wamid: string, phone: string, payload: object }) => Promise<object>} placeOrder
+ * @property {(params: { wamid: string, phone: string, payload: object }) => Promise<object>} dispatchOrder
  */
 
 /**
@@ -158,6 +159,17 @@ function createStreamCommandClient({ redis, replyRegistry, replyTimeoutMs }) {
 
       return this.sendCommand({
         type: 'PlaceOrder',
+        metadata: { wamid, correlationId, phone, timestamp },
+        payload,
+      });
+    },
+
+    async dispatchOrder({ wamid, phone, payload }) {
+      const correlationId = randomUUID();
+      const timestamp = new Date().toISOString();
+
+      return this.sendCommand({
+        type: 'DispatchOrder',
         metadata: { wamid, correlationId, phone, timestamp },
         payload,
       });

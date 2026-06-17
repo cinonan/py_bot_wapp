@@ -135,6 +135,16 @@ function parseDniResponse(text) {
   return { kind: 'invalid' };
 }
 
+function parseDespacharCommand(text) {
+  const normalized = normalizeText(text);
+  const match = normalized.match(/^despachar\s+(\d+)$/i);
+  if (!match) {
+    return null;
+  }
+
+  return Number(match[1]);
+}
+
 module.exports = {
   normalizeText,
   validateRegistrationName,
@@ -146,4 +156,5 @@ module.exports = {
   isMenuAccessAllowed,
   validateCartQuantity,
   parseProvidingMenuChoice,
+  parseDespacharCommand,
 };

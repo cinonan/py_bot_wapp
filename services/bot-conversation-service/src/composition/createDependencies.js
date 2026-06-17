@@ -12,6 +12,9 @@ const {
 const {
   createHandleConversationMessage,
 } = require('../modules/bot-conversation/application/handleConversationMessage');
+const {
+  createHandleAdminDispatchMessage,
+} = require('../modules/bot-conversation/application/handleAdminDispatchMessage');
 const { createWebhookHandler } = require('../modules/bot-conversation/application/webhookHandler');
 const {
   createLoggingMessageSender,
@@ -57,10 +60,15 @@ function createDependencies(config = {}) {
   });
   const messageSender = config.messageSender || createLoggingMessageSender();
   const awaitWebhookProcessing = Boolean(config.awaitWebhookProcessing);
+  const handleAdminDispatchMessage = createHandleAdminDispatchMessage({
+    streamCommandClient,
+    adminOrderNotifyPhone,
+  });
   const handleConversationMessage = createHandleConversationMessage({
     sessionStore,
     streamCommandClient,
     adminOrderNotifyPhone,
+    handleAdminDispatchMessage,
   });
   const webhookHandler = createWebhookHandler({
     handleConversationMessage,

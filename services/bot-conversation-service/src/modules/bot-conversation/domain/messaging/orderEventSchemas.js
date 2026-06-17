@@ -22,7 +22,29 @@ function parseOrderPlacedPayload(payloadJson) {
   return orderPlacedPayloadSchema.parse(parsed);
 }
 
+const orderDispatchedPayloadSchema = z.object({
+  order: z.object({
+    id: z.number().int().positive(),
+    total: z.union([z.string(), z.number()]),
+    estado: z.string().min(1),
+    direccion_entrega: z.string().nullable().optional(),
+    fecha_atencion: z.union([z.string(), z.date()]).optional(),
+  }),
+  client: z.object({
+    id: z.number().int().positive(),
+    nombre: z.string().min(1),
+    telefono: z.string().min(1),
+  }),
+});
+
+function parseOrderDispatchedPayload(payloadJson) {
+  const parsed = typeof payloadJson === 'string' ? JSON.parse(payloadJson) : payloadJson;
+  return orderDispatchedPayloadSchema.parse(parsed);
+}
+
 module.exports = {
   orderPlacedPayloadSchema,
   parseOrderPlacedPayload,
+  orderDispatchedPayloadSchema,
+  parseOrderDispatchedPayload,
 };
