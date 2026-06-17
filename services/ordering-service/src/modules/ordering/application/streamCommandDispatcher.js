@@ -1,6 +1,5 @@
 const { parseStreamEnvelope } = require('../domain/messaging/messageSchemas');
 const { UnknownCommandError } = require('../domain/messaging/streamErrorClassification');
-const { createPublishStreamEvent } = require('./publishStreamEvent');
 const { createHandlePingCommand } = require('./handlePingCommand');
 const { createHandleGetClientByPhoneCommand } = require('./handleGetClientByPhoneCommand');
 const { createHandleRegisterClientCommand } = require('./handleRegisterClientCommand');
@@ -13,7 +12,7 @@ const { createHandleUpdateClientDniCommand } = require('./handleUpdateClientDniC
 const { createHandlePlaceOrderCommand } = require('./handlePlaceOrderCommand');
 
 function createStreamCommandDispatcher({
-  eventPublisher,
+  publishStreamEvent,
   getClientByPhone,
   registerClient,
   getProductCatalog,
@@ -24,8 +23,6 @@ function createStreamCommandDispatcher({
   updateClientDni,
   placeOrder,
 }) {
-  const publishStreamEvent = createPublishStreamEvent(eventPublisher);
-
   const commandDispatcher = {
     Ping: createHandlePingCommand({ publishStreamEvent }),
     GetClientByPhone: createHandleGetClientByPhoneCommand({

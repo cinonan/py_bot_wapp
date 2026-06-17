@@ -10,13 +10,13 @@ Reintentos de webhook con mismo `wamid` no crean pedidos duplicados ni duplican 
 
 ## Acceptance criteria
 
-- [ ] Bot adjunta `wamid` real (o simulado en tests) a todos los comandos de escritura y consulta.
-- [ ] Ordering consulta caché Redis antes de procesar; hit → ignora o responde con resultado previo.
-- [ ] Tras procesamiento exitoso, persiste fila en `comandos_procesados` con `wamid` UNIQUE.
-- [ ] Segundo `PlaceOrder` con mismo `wamid` no inserta segundo pedido en PostgreSQL.
-- [ ] Idempotencia sobrevive reinicio: registro en PostgreSQL evita duplicados si caché Redis expiró.
-- [ ] Pruebas unitarias: caso de uso ignora wamid duplicado.
-- [ ] Prueba de integración: doble entrega simulada → un solo pedido persistido.
+- [x] Bot adjunta `wamid` real (o simulado en tests) a todos los comandos de escritura y consulta.
+- [x] Ordering consulta caché Redis antes de procesar; hit → ignora o responde con resultado previo.
+- [x] Tras procesamiento exitoso, persiste fila en `comandos_procesados` con `wamid` UNIQUE.
+- [x] Segundo `PlaceOrder` con mismo `wamid` no inserta segundo pedido en PostgreSQL.
+- [x] Idempotencia sobrevive reinicio: registro en PostgreSQL evita duplicados si caché Redis expiró.
+- [x] Pruebas unitarias: caso de uso ignora wamid duplicado.
+- [x] Prueba de integración: doble entrega simulada → un solo pedido persistido.
 
 ## Blocked by
 

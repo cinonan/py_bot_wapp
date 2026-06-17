@@ -4,6 +4,7 @@ const { randomUUID } = require('crypto');
 const { createClient } = require('redis');
 const { createTestDependencies } = require('../../src/composition/createTestDependencies');
 const { createOrderingStreamConsumer } = require('../../src/modules/ordering/infrastructure/redis/orderingStreamConsumer');
+const { createPublishStreamEvent } = require('../../src/modules/ordering/application/publishStreamEvent');
 const { createDlqPublisher } = require('../../src/modules/ordering/infrastructure/redis/dlqPublisher');
 const { TransientStreamError } = require('../../src/modules/ordering/domain/messaging/streamErrorClassification');
 const {
@@ -110,7 +111,7 @@ describe('ordering-service stream resilience integration', () => {
     const resilientConsumer = createOrderingStreamConsumer({
       redis: deps.redis,
       dispatchStreamCommand,
-      eventPublisher: deps.eventPublisher,
+      publishStreamEvent: createPublishStreamEvent(deps.eventPublisher),
       publishToDlq: createDlqPublisher({ redis: deps.redis }).publishToDlq,
     });
 
@@ -157,7 +158,7 @@ describe('ordering-service stream resilience integration', () => {
     const dlqConsumer = createOrderingStreamConsumer({
       redis: deps.redis,
       dispatchStreamCommand,
-      eventPublisher: deps.eventPublisher,
+      publishStreamEvent: createPublishStreamEvent(deps.eventPublisher),
       publishToDlq,
       maxRetries: 3,
     });

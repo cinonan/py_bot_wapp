@@ -13,8 +13,13 @@ const { createAddToCart } = require('../modules/ordering/application/addToCart')
 const { createGetCart } = require('../modules/ordering/application/getCart');
 const { createClearCart } = require('../modules/ordering/application/clearCart');
 const { createOrderRepository } = require('../modules/ordering/infrastructure/postgres/orderRepository');
+const { createProcessedCommandRepository } = require('../modules/ordering/infrastructure/postgres/processedCommandRepository');
+const { createProcessedCommandCache } = require('../modules/ordering/infrastructure/redis/processedCommandCache');
 const { createUpdateClientDni } = require('../modules/ordering/application/updateClientDni');
 const { createPlaceOrder } = require('../modules/ordering/application/placeOrder');
+const { createCommandIdempotency } = require('../modules/ordering/application/commandIdempotency');
+const { createIdempotentDispatchStreamCommand } = require('../modules/ordering/application/idempotentDispatchStreamCommand');
+const { createPublishStreamEvent } = require('../modules/ordering/application/publishStreamEvent');
 const { createStreamCommandDispatcher } = require('../modules/ordering/application/streamCommandDispatcher');
 const { createOrderingStreamConsumer } = require('../modules/ordering/infrastructure/redis/orderingStreamConsumer');
 const { createJwtVerifier } = require('../modules/ordering/infrastructure/http/jwtVerifier');
@@ -29,9 +34,17 @@ function createDependencies(config = {}) {
   const clientRepository = createClientRepository(pool);
   const productRepository = createProductRepository(pool);
   const orderRepository = createOrderRepository(pool);
+  const processedCommandRepository = createProcessedCommandRepository(pool);
   const redis = createRedisClient(redisUrl);
   const eventPublisher = createStreamPublisher({ redis });
   const { publishToDlq } = createDlqPublisher({ redis });
+  const processedCommandCache = createProcessedCommandCache({ redis });
+  const commandIdempotency = createCommandIdempotency({
+    processedCommandCache,
+    processedCommandRepository,
+  });
+  const basePublishStreamEvent = createPublishStreamEvent(eventPublisher);
+  const publishStreamEvent = commandIdempotency.wrapPublishStreamEvent(basePublishStreamEvent);
   const getClientByPhone = createGetClientByPhone({ clientRepository });
   const registerClient = createRegisterClient({ clientRepository });
   const getProductCatalog = createGetProductCatalog({ productRepository });
@@ -42,8 +55,8 @@ function createDependencies(config = {}) {
   const clearCart = createClearCart({ cartStore });
   const updateClientDni = createUpdateClientDni({ clientRepository });
   const placeOrder = createPlaceOrder({ cartStore, clientRepository, orderRepository });
-  const dispatchStreamCommand = createStreamCommandDispatcher({
-    eventPublisher,
+  const innerDispatchStreamCommand = createStreamCommandDispatcher({
+    publishStreamEvent,
     getClientByPhone,
     registerClient,
     getProductCatalog,
@@ -54,10 +67,15 @@ function createDependencies(config = {}) {
     updateClientDni,
     placeOrder,
   });
+  const dispatchStreamCommand = createIdempotentDispatchStreamCommand({
+    dispatchStreamCommand: innerDispatchStreamCommand,
+    commandIdempotency,
+    publishStreamEvent: basePublishStreamEvent,
+  });
   const streamConsumer = createOrderingStreamConsumer({
     redis,
     dispatchStreamCommand,
-    eventPublisher,
+    publishStreamEvent,
     publishToDlq,
   });
   const jwtVerifier = createJwtVerifier({ publicKey: jwtPublicKey });

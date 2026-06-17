@@ -1,10 +1,13 @@
 const fs = require('fs');
 const path = require('path');
+const { randomUUID } = require('crypto');
 const { Pool } = require('pg');
 const { createClient } = require('redis');
 const { runSeed } = require('../../scripts/seed');
 const { createTestDependencies } = require('../../src/composition/createTestDependencies');
 const { CART_KEY_PREFIX } = require('../../src/modules/ordering/infrastructure/redis/cartStore');
+const { PROCESSED_COMMAND_KEY_PREFIX } = require('../../src/modules/ordering/infrastructure/redis/processedCommandCache');
+const { STREAM_BOT_EVENTS } = require('../../src/modules/ordering/domain/messaging/streams');
 
 const TEST_ENV_FILE = path.join(__dirname, '.test-env.json');
 
@@ -67,6 +70,7 @@ describe('ordering-service PlaceOrder integration', () => {
     await pool.query('DELETE FROM pedido_historial_estados');
     await pool.query('DELETE FROM detalle_pedidos');
     await pool.query('DELETE FROM pedidos');
+    await pool.query('DELETE FROM comandos_procesados');
     await pool.query('DELETE FROM clientes WHERE telefono = $1', [phone]);
   });
 
@@ -174,5 +178,83 @@ describe('ordering-service PlaceOrder integration', () => {
       [phone],
     );
     expect(clientRow.rows[0].dni).toBe('11223344');
+  });
+
+  test('duplicate PlaceOrder with same wamid persists only one order', async () => {
+    await seedClientAndCart();
+    const wamid = 'wamid.placeorder.duplicate';
+    const payload = {
+      direccion_entrega: 'Av. Entrega 789, Lima',
+      dni_facturacion: '99887766',
+    };
+
+    const firstResponse = await botDeps.streamCommandClient.placeOrder({
+      wamid,
+      phone,
+      payload,
+    });
+    expect(firstResponse.type).toBe('OrderPlaced');
+
+    const secondResponse = await botDeps.streamCommandClient.placeOrder({
+      wamid,
+      phone,
+      payload,
+    });
+    expect(secondResponse.type).toBe('OrderPlaced');
+    const secondPayload = JSON.parse(secondResponse.payload);
+    expect(secondPayload.order.id).toBe(JSON.parse(firstResponse.payload).order.id);
+
+    const orderCount = await pool.query(
+      'SELECT COUNT(*)::int AS count FROM pedidos',
+    );
+    expect(orderCount.rows[0].count).toBe(1);
+
+    const processedRow = await pool.query(
+      'SELECT wamid, tipo_comando FROM comandos_procesados WHERE wamid = $1',
+      [wamid],
+    );
+    expect(processedRow.rows[0]).toMatchObject({
+      wamid,
+      tipo_comando: 'PlaceOrder',
+    });
+  });
+
+  test('duplicate PlaceOrder survives Redis cache expiry via PostgreSQL guard', async () => {
+    await seedClientAndCart();
+    const wamid = 'wamid.placeorder.pg-guard';
+    const payload = {
+      direccion_entrega: 'Av. Entrega 999, Lima',
+    };
+
+    const firstResponse = await botDeps.streamCommandClient.placeOrder({
+      wamid,
+      phone,
+      payload,
+    });
+    expect(firstResponse.type).toBe('OrderPlaced');
+    const firstOrderId = JSON.parse(firstResponse.payload).order.id;
+
+    await adminRedis.del(`${PROCESSED_COMMAND_KEY_PREFIX}:${wamid}`);
+
+    await adminRedis.xAdd(STREAM_BOT_EVENTS, '*', {
+      type: 'PlaceOrder',
+      wamid,
+      correlationId: randomUUID(),
+      phone,
+      timestamp: new Date().toISOString(),
+      payload: JSON.stringify(payload),
+    });
+
+    await sleep(500);
+
+    const orderCount = await pool.query(
+      'SELECT COUNT(*)::int AS count FROM pedidos',
+    );
+    expect(orderCount.rows[0].count).toBe(1);
+
+    const orderRow = await pool.query(
+      'SELECT id FROM pedidos ORDER BY id ASC LIMIT 1',
+    );
+    expect(orderRow.rows[0].id).toBe(firstOrderId);
   });
 });
